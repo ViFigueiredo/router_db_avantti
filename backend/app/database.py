@@ -63,6 +63,7 @@ class SQLServerConnection:
         try:
             logger.info(f"Pre-checking TCP connectivity to {base_host}:{port}...")
             with socket.create_connection((base_host, port), timeout=timeout):
+                logger.info(f"TCP Port {port} is OPEN on {base_host}")
                 return True
         except (socket.timeout, ConnectionRefusedError, OSError) as e:
             logger.error(f"Port Pre-check Failed: {base_host}:{port} is unreachable. Error: {str(e)}")
@@ -70,16 +71,20 @@ class SQLServerConnection:
 
     @staticmethod
     def _create_pymssql_conn(config: dict, db_name: str):
-        # pymssql handles Named Instances in the 'server' parameter
+        # IMPORTANT: For Named Instances in pymssql, the recommended format is host:port
+        # The backslash format (host\instance) can sometimes be flaky with some drivers.
+        # We'll try to use the host as is, but if it has a backslash, pymssql should handle it.
+        server_str = config['host']
         return pymssql.connect(
-            server=config['host'],
+            server=server_str,
             port=config['port'],
             user=config['username'],
             password=config['password'],
             database=db_name,
             as_dict=True,
-            login_timeout=10,
-            timeout=30
+            login_timeout=20,
+            timeout=60,
+            charset='utf8' # Ensure charset for better compatibility
         )
 
     @staticmethod
@@ -99,26 +104,30 @@ class SQLServerConnection:
                 del SQLServerConnection._connection_pool[db_name]
 
         # 2. Pre-check port (using only base host for socket)
-        if not SQLServerConnection.check_port_open(config['host'], config['port']):
-            # Even if port check fails, we might still try pymssql as it might use dynamic ports 
-            # but for fixed ports it's a good indicator.
-            logger.warning(f"TCP Port {config['port']} seems closed on {config['host']}, but proceeding with pymssql attempt...")
+        # We log the result but DON'T raise an error here to let pymssql try its own logic
+        # as Named Instances often use dynamic ports via SQL Browser.
+        SQLServerConnection.check_port_open(config['host'], config['port'])
 
         # 3. Attempt connection with a hard thread timeout
-        logger.info(f"Attempting pymssql connection to: {config['host']} (Port: {config['port']}, DB: {db_name})...")
+        logger.info(f"Attempting pymssql connection to server: {config['host']} (Port: {config['port']}, User: {config['username']}, DB: {db_name})...")
         
         future = SQLServerConnection._executor.submit(SQLServerConnection._create_pymssql_conn, config, db_name)
         try:
-            conn = future.result(timeout=20) # 20s hard timeout
+            # Increased hard timeout for named instances discovery
+            conn = future.result(timeout=30) 
             SQLServerConnection._connection_pool[db_name] = conn
-            logger.info(f"Connected successfully to {db_name}")
+            logger.info(f"Connected successfully to SQL Server ({db_name})")
             return conn
         except TimeoutError:
-            logger.error(f"pymssql connection attempt timed out after 20s for {config['host']}")
-            raise ConnectionError("SQL Server connection timed out. Check IP/Instance and Port.")
+            logger.error(f"pymssql connection attempt timed out after 30s for {config['host']}")
+            raise ConnectionError(f"Tempo esgotado ao conectar a {config['host']}. Verifique se o SQL Browser está ativo.")
         except Exception as e:
-            logger.error(f"pymssql failed to connect: {str(e)}")
-            raise
+            error_msg = str(e)
+            logger.error(f"pymssql failed to connect: {error_msg}")
+            # Specific hint for common named instance issues
+            if "Adaptive Server is unavailable" in error_msg:
+                error_msg += " (Dica: Verifique se o SQL Browser Service está rodando no servidor e se conexões remotas estão habilitadas)"
+            raise ConnectionError(f"Erro de conexão SQL Server: {error_msg}")
 
     @staticmethod
     def execute_query(conn, query: str, params: Optional[Dict[str, Any]] = None, close_conn: bool = True) -> List[Dict[str, Any]]:
@@ -164,7 +173,7 @@ class SQLServerConnection:
             return db_list
         except Exception as e:
             logger.error(f"Discovery Error (Databases): {str(e)}")
-            return []
+            raise
 
     @staticmethod
     def list_tables(database: str) -> List[str]:
@@ -185,4 +194,4 @@ class SQLServerConnection:
             return table_list
         except Exception as e:
             logger.error(f"Discovery Error (Tables for {database}): {str(e)}")
-            return []
+            raise
