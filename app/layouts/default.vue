@@ -27,8 +27,22 @@
           ]"
         >
           <div v-if="$route.path === '/'" class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 rounded-r-full"></div>
-          <i class="pi pi-grid text-lg" :class="{ 'scale-110': $route.path === '/' }"></i>
+          <i class="pi pi-chart-pie text-lg" :class="{ 'scale-110': $route.path === '/' }"></i>
           <span>Dashboard</span>
+        </NuxtLink>
+
+        <NuxtLink
+          to="/projects"
+          class="flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 font-semibold no-underline group relative overflow-hidden"
+          :class="[
+            $route.path === '/projects' 
+              ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400' 
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-indigo-500'
+          ]"
+        >
+          <div v-if="$route.path === '/projects'" class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 rounded-r-full"></div>
+          <i class="pi pi-grid text-lg" :class="{ 'scale-110': $route.path === '/projects' }"></i>
+          <span>Projetos</span>
         </NuxtLink>
         
         <NuxtLink
