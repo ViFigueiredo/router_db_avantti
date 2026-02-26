@@ -73,52 +73,7 @@ onMounted(() => {
         tempo real.</p>
     </div>
 
-    <!-- KPI Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div
-        class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group">
-        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-          <i class="pi pi-box text-6xl text-indigo-600" />
-        </div>
-        <div class="flex flex-col gap-1 relative z-10">
-          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Projetos Ativos</span>
-          <span class="text-4xl font-black text-slate-900 dark:text-white">{{ stats.total_projects }}</span>
-        </div>
-      </div>
-
-      <div
-        class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group">
-        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-          <i class="pi pi-bolt text-6xl text-amber-500" />
-        </div>
-        <div class="flex flex-col gap-1 relative z-10">
-          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Requisições</span>
-          <span class="text-4xl font-black text-slate-900 dark:text-white">{{ stats.total_requests }}</span>
-        </div>
-      </div>
-
-      <div
-        class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group">
-        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-          <i class="pi pi-server text-6xl text-blue-500" />
-        </div>
-        <div class="flex flex-col gap-1 relative z-10">
-          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Conexões Ativas</span>
-          <span class="text-4xl font-black text-slate-900 dark:text-white">{{ stats.active_connections }}</span>
-        </div>
-      </div>
-
-      <div
-        class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group">
-        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-          <i class="pi pi-clock text-6xl text-purple-500" />
-        </div>
-        <div class="flex flex-col gap-1 relative z-10">
-          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Latência Média</span>
-          <span class="text-4xl font-black text-slate-900 dark:text-white">{{ stats.avg_response_time }}</span>
-        </div>
-      </div>
-    </div>
+    <!-- KPI Grid Moved to Sidebar -->
 
     <div class="flex flex-col lg:flex-row gap-8">
       <!-- Quick Actions / Status -->
@@ -131,52 +86,88 @@ onMounted(() => {
           <div class="space-y-4">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">API Gateway</span>
-              <span
-class="flex items-center gap-2 text-xs font-bold"
+              <span class="flex items-center gap-2 text-xs font-bold"
                 :class="getStatusConfig(systemStatus.api_gateway).color">
                 <span class="relative flex h-2.5 w-2.5">
-                  <span
-class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-                    :class="getStatusConfig(systemStatus.api_gateway).ping"/>
-                  <span
-class="relative inline-flex rounded-full h-2.5 w-2.5"
-                    :class="getStatusConfig(systemStatus.api_gateway).dot"/>
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                    :class="getStatusConfig(systemStatus.api_gateway).ping" />
+                  <span class="relative inline-flex rounded-full h-2.5 w-2.5"
+                    :class="getStatusConfig(systemStatus.api_gateway).dot" />
                 </span>
                 {{ getStatusConfig(systemStatus.api_gateway).label }}
               </span>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">SQL Server</span>
-              <span
-class="flex items-center gap-2 text-xs font-bold"
+              <span class="flex items-center gap-2 text-xs font-bold"
                 :class="getStatusConfig(systemStatus.sql_server).color">
                 <span class="relative flex h-2.5 w-2.5">
-                  <span
-class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-                    :class="getStatusConfig(systemStatus.sql_server).ping"/>
-                  <span
-class="relative inline-flex rounded-full h-2.5 w-2.5"
-                    :class="getStatusConfig(systemStatus.sql_server).dot"/>
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                    :class="getStatusConfig(systemStatus.sql_server).ping" />
+                  <span class="relative inline-flex rounded-full h-2.5 w-2.5"
+                    :class="getStatusConfig(systemStatus.sql_server).dot" />
                 </span>
                 {{ getStatusConfig(systemStatus.sql_server).label }}
               </span>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Discovery Service</span>
-              <span
-class="flex items-center gap-2 text-xs font-bold"
+              <span class="flex items-center gap-2 text-xs font-bold"
                 :class="getStatusConfig(systemStatus.discovery).color">
                 <span class="relative flex h-2.5 w-2.5">
-                  <span
-class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-                    :class="getStatusConfig(systemStatus.discovery).ping"/>
-                  <span
-class="relative inline-flex rounded-full h-2.5 w-2.5"
-                    :class="getStatusConfig(systemStatus.discovery).dot"/>
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                    :class="getStatusConfig(systemStatus.discovery).ping" />
+                  <span class="relative inline-flex rounded-full h-2.5 w-2.5"
+                    :class="getStatusConfig(systemStatus.discovery).dot" />
                 </span>
                 {{ getStatusConfig(systemStatus.discovery).label }}
               </span>
             </div>
+          </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div
+          class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+          <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <i class="pi pi-box text-6xl text-indigo-600" />
+          </div>
+          <div class="flex flex-col gap-1 relative z-10">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Projetos Ativos</span>
+            <span class="text-4xl font-black text-slate-900 dark:text-white">{{ stats.total_projects }}</span>
+          </div>
+        </div>
+
+        <div
+          class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+          <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <i class="pi pi-bolt text-6xl text-amber-500" />
+          </div>
+          <div class="flex flex-col gap-1 relative z-10">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Requisições</span>
+            <span class="text-4xl font-black text-slate-900 dark:text-white">{{ stats.total_requests }}</span>
+          </div>
+        </div>
+
+        <div
+          class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+          <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <i class="pi pi-server text-6xl text-blue-500" />
+          </div>
+          <div class="flex flex-col gap-1 relative z-10">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Conexões Ativas</span>
+            <span class="text-4xl font-black text-slate-900 dark:text-white">{{ stats.active_connections }}</span>
+          </div>
+        </div>
+
+        <div
+          class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+          <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <i class="pi pi-clock text-6xl text-purple-500" />
+          </div>
+          <div class="flex flex-col gap-1 relative z-10">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Latência Média</span>
+            <span class="text-4xl font-black text-slate-900 dark:text-white">{{ stats.avg_response_time }}</span>
           </div>
         </div>
       </div>
@@ -217,14 +208,12 @@ class="relative inline-flex rounded-full h-2.5 w-2.5"
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50 dark:divide-slate-800/50">
-              <tr
-v-for="activity in recentActivity" :key="activity.id"
+              <tr v-for="activity in recentActivity" :key="activity.id"
                 class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                 <td class="p-4 align-top">
                   <div class="flex flex-col">
                     <span class="font-bold text-sm text-slate-700 dark:text-slate-300">{{ activity.project }}</span>
-                    <span
-class="text-[10px] font-bold uppercase tracking-wider mt-1"
+                    <span class="text-[10px] font-bold uppercase tracking-wider mt-1"
                       :class="activity.status === 'success' ? 'text-emerald-500' : 'text-red-500'">
                       {{ activity.method }}
                     </span>
@@ -233,7 +222,7 @@ class="text-[10px] font-bold uppercase tracking-wider mt-1"
                 <td class="p-4 align-top">
                   <div class="max-w-[200px] truncate">
                     <span class="text-xs font-mono text-slate-500 cursor-help" :title="activity.query">{{ activity.query
-                    }}</span>
+                      }}</span>
                   </div>
                 </td>
                 <td class="p-4 align-top">
