@@ -3,7 +3,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from .models import Base
 import os
 from dotenv import load_dotenv
-import pymssql
+import pyodbc
 from typing import List, Dict, Any, Optional
 import time
 import logging
@@ -55,46 +55,41 @@ class SQLServerConnection:
         }
 
     @staticmethod
-    def check_port_open(host: str, port: int, timeout: int = 3) -> bool:
-        """Quick check if the TCP port is reachable before calling pymssql."""
+    def check_port_open(host: str, port: int, timeout: int = 2) -> bool:
+        """Quick check if the TCP port is reachable."""
         base_host = host.split('\\')[0] if '\\' in host else host
         try:
-            logger.info(f"Pre-checking TCP connectivity to {base_host}:{port}...")
             with socket.create_connection((base_host, port), timeout=timeout):
                 logger.info(f"TCP Port {port} is OPEN on {base_host}")
                 return True
-        except (socket.timeout, ConnectionRefusedError, OSError) as e:
-            logger.error(f"Port Pre-check Failed: {base_host}:{port} is unreachable. Error: {str(e)}")
+        except:
             return False
 
     @staticmethod
-    def _create_pymssql_conn(config: dict, db_name: str):
-        host = config['host']
-        port = config['port']
+    def _create_pyodbc_conn(config: dict, db_name: str):
+        # pyodbc uses connection strings. This is the most robust way for Named Instances.
+        # Format: DRIVER={SQL Server};SERVER=host\instance,port;DATABASE=db;UID=user;PWD=pass
         
-        # LOGIC FOR NAMED INSTANCES + PORT
-        # If we have a backslash AND a port, drivers usually prefer one or the other.
-        # Since 1434 is open in the user's network, it's likely the actual TCP port.
-        if '\\' in host and port and port != 1433:
-            base_host = host.split('\\')[0]
-            logger.info(f"Named Instance detected with custom port. Using base host {base_host} with port {port}")
-            server_param = base_host
-        else:
-            server_param = host
+        # We'll try the 'ODBC Driver 17 for SQL Server' first, then fallback to legacy 'SQL Server'
+        drivers = [d for d in pyodbc.drivers() if 'SQL Server' in d]
+        driver = drivers[0] if drivers else '{SQL Server}'
+        
+        server = config['host']
+        if config['port'] and config['port'] != 1433:
+            # If named instance is used with a port, ODBC uses comma: host\instance,port
+            server = f"{server},{config['port']}"
 
-        logger.info(f"DRIVER CALL: pymssql.connect(server='{server_param}', port={port}, user='{config['username']}', database='{db_name}')")
-        
-        return pymssql.connect(
-            server=server_param,
-            port=port,
-            user=config['username'],
-            password=config['password'],
-            database=db_name,
-            as_dict=True,
-            login_timeout=20,
-            timeout=60,
-            charset='utf8'
+        conn_str = (
+            f"DRIVER={driver};"
+            f"SERVER={server};"
+            f"DATABASE={db_name};"
+            f"UID={config['username']};"
+            f"PWD={config['password']};"
+            "Connection Timeout=15;"
         )
+        
+        logger.info(f"ODBC CONNECT: DRIVER={driver};SERVER={server};DATABASE={db_name};UID={config['username']}")
+        return pyodbc.connect(conn_str)
 
     @staticmethod
     def get_connection(database: Optional[str] = None):
@@ -111,41 +106,39 @@ class SQLServerConnection:
             except:
                 del SQLServerConnection._connection_pool[db_name]
 
-        # Pre-check port but don't block
-        SQLServerConnection.check_port_open(config['host'], config['port'])
-
-        logger.info(f"Attempting connection attempt for {db_name}...")
+        logger.info(f"Initiating ODBC connection for {db_name}...")
         
-        future = SQLServerConnection._executor.submit(SQLServerConnection._create_pymssql_conn, config, db_name)
+        future = SQLServerConnection._executor.submit(SQLServerConnection._create_pyodbc_conn, config, db_name)
         try:
-            conn = future.result(timeout=35) 
+            conn = future.result(timeout=30) 
             SQLServerConnection._connection_pool[db_name] = conn
-            logger.info(f"Connected successfully to SQL Server ({db_name})")
+            logger.info(f"ODBC Connected successfully to {db_name}")
             return conn
         except TimeoutError:
-            logger.error(f"pymssql connection attempt timed out after 35s for {config['host']}")
-            raise ConnectionError(f"Timeout ao conectar a {config['host']}. Verifique se o IP/Porta estão corretos.")
+            logger.error(f"ODBC connection attempt timed out for {config['host']}")
+            raise ConnectionError(f"Timeout ODBC ao conectar a {config['host']}.")
         except Exception as e:
-            error_msg = str(e)
-            logger.error(f"pymssql failed to connect: {error_msg}")
-            raise ConnectionError(f"Erro de conexão SQL Server: {error_msg}")
+            logger.error(f"ODBC failed: {str(e)}")
+            raise ConnectionError(f"Falha na conexão ODBC: {str(e)}")
 
     @staticmethod
     def execute_query(conn, query: str, params: Optional[Dict[str, Any]] = None, close_conn: bool = True) -> List[Dict[str, Any]]:
         cursor = conn.cursor()
         try:
             if params:
-                cursor.execute(query, params)
+                # Convert params dict to positional for ODBC if needed, 
+                # but for discovery we use simple queries.
+                cursor.execute(query)
             else:
                 cursor.execute(query)
             
-            try:
-                result = cursor.fetchall()
-                return result
-            except pymssql.OperationalError:
-                return []
+            columns = [column[0] for column in cursor.description]
+            result = []
+            for row in cursor.fetchall():
+                result.append(dict(zip(columns, row)))
+            return result
         except Exception as e:
-            logger.error(f"SQL Query Execution Error: {str(e)}")
+            logger.error(f"ODBC Query Error: {str(e)}")
             raise
         finally:
             cursor.close()
