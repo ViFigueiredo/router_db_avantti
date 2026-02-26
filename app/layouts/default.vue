@@ -165,10 +165,30 @@ body {
 
 .p-dialog-mask {
   backdrop-filter: blur(4px);
+  z-index: 1100 !important;
 }
 
 .p-dialog {
   @apply rounded-3xl overflow-hidden border-none shadow-2xl shadow-indigo-500/10 bg-white dark:bg-slate-900;
+  max-height: 90vh;
+}
+
+/* Fix transparency in PrimeVue Select/Dropdown lists */
+.p-select-overlay, .p-multiselect-overlay, .p-dropdown-panel {
+  @apply bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl !important;
+  opacity: 1 !important;
+}
+
+.p-select-list-container, .p-multiselect-list-container {
+  @apply bg-white dark:bg-slate-900 !important;
+}
+
+.p-select-option, .p-multiselect-option {
+  @apply text-slate-700 dark:text-slate-300 !important;
+}
+
+.p-select-option:hover, .p-multiselect-option:hover {
+  @apply bg-slate-100 dark:bg-slate-800 !important;
 }
 
 .p-dialog-header {
