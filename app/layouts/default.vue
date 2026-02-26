@@ -47,19 +47,7 @@
       </nav>
       
       <div class="p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-sm border border-slate-200 dark:border-slate-700">
-          <div class="flex items-center justify-between mb-1">
-            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Aparência</span>
-            <Button
-              :icon="isDark ? 'pi pi-sun' : 'pi pi-moon'"
-              variant="text"
-              rounded
-              class="w-8 h-8 !p-0"
-              @click="toggleDarkMode"
-            />
-          </div>
-          <p class="text-[10px] text-slate-400 dark:text-slate-500">Alternar entre temas claro e escuro</p>
-        </div>
+        <!-- Appearance toggle removed -->
       </div>
     </aside>
 

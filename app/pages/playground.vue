@@ -235,7 +235,11 @@ curl -X POST "http://localhost:8000/api/query/" \
 }
 
 :deep(.p-paginator) {
-  @apply !bg-transparent !border-t !border-slate-50 dark: !border-slate-800 !p-4;
+  @apply !bg-transparent !border-t !border-slate-50 !p-4;
+}
+
+:deep(.dark .p-paginator) {
+  @apply !border-slate-800;
 }
 
 :deep(.p-paginator-current) {

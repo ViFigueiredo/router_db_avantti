@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import { useToast } from 'primevue/usetoast'
 
+import { useConfirm } from 'primevue/useconfirm'
+
 const { fetchApi } = useApi()
 const toast = useToast()
+const confirm = useConfirm()
 
 const projects = ref([])
 const isLoading = ref(true)
 const isModalOpen = ref(false)
+const isEditing = ref(false)
+const editingId = ref('')
 const availableDatabases = ref<string[]>([])
 const availableTables = ref<string[]>([])
 const isLoadingDiscovery = ref(false)
@@ -101,11 +106,11 @@ const createProject = async () => {
       }
     }
 
-    await fetchApi('/api/projects/', {
-      method: 'POST',
+    await fetchApi(isEditing.value ? `/api/projects/${editingId.value}` : '/api/projects/', {
+      method: isEditing.value ? 'PUT' : 'POST',
       body: payload
     })
-    toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Projeto criado com sucesso!', life: 3000 })
+    toast.add({ severity: 'success', summary: 'Sucesso', detail: isEditing.value ? 'Projeto atualizado com sucesso!' : 'Projeto criado com sucesso!', life: 3000 })
     isModalOpen.value = false
     resetForm()
     fetchProjects()
@@ -133,6 +138,55 @@ const resetForm = () => {
     sqlServer: { database: '', allowed_tables: '' }
   }
   selectedTables.value = []
+  isEditing.value = false
+  editingId.value = ''
+}
+
+const openNewProjectModal = () => {
+  resetForm()
+  isModalOpen.value = true
+}
+
+const editProject = (project: any) => {
+  isEditing.value = true
+  editingId.value = project.id
+  newProject.value = {
+    name: project.name,
+    slug: project.slug,
+    sqlServer: {
+      database: project.database_connections[0]?.database || '',
+      allowed_tables: ''
+    }
+  }
+
+  if (project.database_connections[0]?.allowed_tables) {
+    selectedTables.value = project.database_connections[0].allowed_tables.split(',').filter((t: string) => t)
+  } else {
+    selectedTables.value = []
+  }
+
+  isModalOpen.value = true
+}
+
+const deleteProject = (id: string) => {
+  confirm.require({
+    message: 'Tem certeza que deseja excluir este projeto?',
+    header: 'Confirmação',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Excluir',
+    rejectLabel: 'Cancelar',
+    acceptClass: '!bg-red-600 !border-red-600 hover:!bg-red-700',
+    rejectClass: '!text-slate-500 hover:!bg-slate-100',
+    accept: async () => {
+      try {
+        await fetchApi(`/api/projects/${id}`, { method: 'DELETE' })
+        toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Projeto excluído com sucesso!', life: 3000 })
+        fetchProjects()
+      } catch (error: any) {
+        toast.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível excluir o projeto', life: 3000 })
+      }
+    }
+  })
 }
 
 const copyApiKey = (key: string) => {
@@ -171,7 +225,7 @@ onMounted(() => {
 
         <Button label="Novo Projeto" icon="pi pi-plus" size="large"
           class="!bg-white !text-slate-900 !border-none !rounded-2xl !px-8 !py-4 !font-bold hover:!bg-indigo-50 transition-colors shadow-xl"
-          @click="isModalOpen = true" />
+          @click="openNewProjectModal" />
       </div>
     </div>
 
@@ -194,7 +248,7 @@ onMounted(() => {
       <h3 class="text-2xl font-bold text-slate-900 dark:text-white">Nenhum projeto ainda</h3>
       <p class="text-slate-500 dark:text-slate-400 mt-2 font-medium">Comece criando seu primeiro tenant agora mesmo.</p>
       <Button label="Criar Primeiro Projeto" variant="text" class="mt-6 !font-bold !text-indigo-600"
-        @click="isModalOpen = true" />
+        @click="openNewProjectModal" />
     </div>
 
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -227,8 +281,13 @@ onMounted(() => {
 
           <div class="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
             <span>Criado em {{ new Date(project.created_at).toLocaleDateString() }}</span>
-            <div class="flex gap-1">
-              <div v-for="i in 3" :key="i" class="w-1 h-1 rounded-full bg-slate-200 dark:bg-slate-700"></div>
+            <div class="flex gap-2">
+              <Button icon="pi pi-pencil" rounded text size="small"
+                class="!w-7 !h-7 !text-slate-400 hover:!text-indigo-500 hover:!bg-indigo-50 dark:hover:!bg-indigo-500/10"
+                @click="editProject(project)" v-tooltip="'Editar'" />
+              <Button icon="pi pi-trash" rounded text size="small"
+                class="!w-7 !h-7 !text-slate-400 hover:!text-red-500 hover:!bg-red-50 dark:hover:!bg-red-500/10"
+                @click="deleteProject(project.id)" v-tooltip="'Excluir'" />
             </div>
           </div>
         </div>
@@ -240,7 +299,8 @@ onMounted(() => {
       class="w-[95vw] max-w-[480px]">
       <template #header>
         <div class="flex flex-col">
-          <span class="text-xl font-black text-slate-900 dark:text-white tracking-tight">Configurar Novo Tenant</span>
+          <span class="text-xl font-black text-slate-900 dark:text-white tracking-tight">{{ isEditing ? 'Editar Tenant'
+            : 'Configurar Novo Tenant' }}</span>
           <span class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mt-0.5">Integração SQL
             Server</span>
         </div>
@@ -307,7 +367,8 @@ onMounted(() => {
         <div class="flex justify-end gap-3">
           <Button label="Cancelar" variant="text" severity="secondary" @click="isModalOpen = false" size="small"
             class="!rounded-xl" />
-          <Button label="Finalizar e Gerar Key" icon="pi pi-bolt" @click="createProject" size="small"
+          <Button :label="isEditing ? 'Salvar Alterações' : 'Finalizar e Gerar Key'" icon="pi pi-bolt"
+            @click="createProject" size="small"
             class="!bg-indigo-600 !border-indigo-600 !text-white !font-bold !px-4 !rounded-xl" />
         </div>
       </template>
