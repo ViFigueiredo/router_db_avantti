@@ -135,6 +135,11 @@ const resetForm = () => {
   selectedTables.value = []
 }
 
+const copyApiKey = (key: string) => {
+  navigator.clipboard.writeText(key)
+  toast.add({ severity: 'info', summary: 'Copiado!', detail: 'Chave de acesso copiada para a área de transferência.', life: 2000 })
+}
+
 onMounted(() => {
   fetchProjects()
   fetchDatabases()
@@ -214,7 +219,7 @@ onMounted(() => {
             <div class="flex items-center justify-between mb-3">
               <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Chave de Acesso</span>
               <i class="pi pi-copy text-slate-300 hover:text-indigo-500 cursor-pointer transition-colors"
-                v-tooltip="'Copiar API Key'"></i>
+                v-tooltip="'Copiar API Key'" @click="copyApiKey(project.api_key)"></i>
             </div>
             <code
               class="text-xs text-slate-600 dark:text-slate-300 break-all select-all block font-mono">{{ project.api_key }}</code>
