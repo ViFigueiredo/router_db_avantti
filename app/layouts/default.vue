@@ -27,7 +27,7 @@
           ]"
         >
           <div v-if="$route.path === '/'" class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 rounded-r-full"/>
-          <i class="pi pi-chart-pie text-lg" :class="{ 'scale-110': $route.path === '/' }"/>
+          <i class="pi pi-chart-bar text-lg" :class="{ 'scale-110': $route.path === '/' }"/>
           <span>Dashboard</span>
         </NuxtLink>
 
@@ -41,7 +41,7 @@
           ]"
         >
           <div v-if="$route.path === '/projects'" class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 rounded-r-full"/>
-          <i class="pi pi-grid text-lg" :class="{ 'scale-110': $route.path === '/projects' }"/>
+          <i class="pi pi-box text-lg" :class="{ 'scale-110': $route.path === '/projects' }"/>
           <span>Projetos</span>
         </NuxtLink>
         
@@ -55,7 +55,7 @@
           ]"
         >
           <div v-if="$route.path === '/playground'" class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 rounded-r-full"/>
-          <i class="pi pi-terminal text-lg" :class="{ 'scale-110': $route.path === '/playground' }"/>
+          <i class="pi pi-code text-lg" :class="{ 'scale-110': $route.path === '/playground' }"/>
           <span>Playground</span>
         </NuxtLink>
       </nav>
