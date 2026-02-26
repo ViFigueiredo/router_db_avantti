@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 import pymssql
 from typing import List, Dict, Any, Optional
+import time
 
 load_dotenv()
 
@@ -26,8 +27,17 @@ def get_db():
     finally:
         db.close()
 
+# In-memory cache for discovery
+_discovery_cache = {
+    'databases': {'data': [], 'expires': 0},
+    'tables': {} # database_name: {'data': [], 'expires': 0}
+}
+CACHE_TTL = 300 # 5 minutes
+
 # SQL Server Connection Management
 class SQLServerConnection:
+    _connection_pool = {} # Simple pool by database name
+
     @staticmethod
     def get_global_config():
         return {
@@ -39,18 +49,38 @@ class SQLServerConnection:
 
     @staticmethod
     def get_connection(database: Optional[str] = None):
+        db_name = database if database else 'master'
+        
+        # Check if we have a valid cached connection
+        if db_name in SQLServerConnection._connection_pool:
+            conn = SQLServerConnection._connection_pool[db_name]
+            try:
+                # Test connection health
+                cursor = conn.cursor()
+                cursor.execute("SELECT 1")
+                cursor.close()
+                return conn
+            except:
+                # Connection is dead, remove it
+                del SQLServerConnection._connection_pool[db_name]
+
         config = SQLServerConnection.get_global_config()
-        return pymssql.connect(
+        conn = pymssql.connect(
             server=config['host'],
             port=config['port'],
             user=config['username'],
             password=config['password'],
-            database=database if database else 'master',
-            as_dict=True
+            database=db_name,
+            as_dict=True,
+            login_timeout=5, # Reduce timeout for faster feedback
+            timeout=30
         )
+        # We don't close discovery connections immediately anymore to allow pooling
+        SQLServerConnection._connection_pool[db_name] = conn
+        return conn
 
     @staticmethod
-    def execute_query(conn, query: str, params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    def execute_query(conn, query: str, params: Optional[Dict[str, Any]] = None, close_conn: bool = True) -> List[Dict[str, Any]]:
         cursor = conn.cursor()
         try:
             if params:
@@ -65,18 +95,53 @@ class SQLServerConnection:
                 return []
         finally:
             cursor.close()
-            conn.close()
+            if close_conn:
+                conn.close()
+                # Remove from pool if it was there
+                for db, c in list(SQLServerConnection._connection_pool.items()):
+                    if c == conn:
+                        del SQLServerConnection._connection_pool[db]
 
     @staticmethod
     def list_databases() -> List[str]:
-        conn = SQLServerConnection.get_connection()
-        query = "SELECT name FROM sys.databases WHERE database_id > 4" # Skip system databases
-        result = SQLServerConnection.execute_query(conn, query)
-        return [row['name'] for row in result]
+        now = time.time()
+        if _discovery_cache['databases']['expires'] > now:
+            return _discovery_cache['databases']['data']
+
+        try:
+            conn = SQLServerConnection.get_connection()
+            # Fast query for databases
+            query = "SELECT name FROM sys.databases WHERE database_id > 4 AND state = 0" 
+            result = SQLServerConnection.execute_query(conn, query, close_conn=False)
+            db_list = [row['name'] for row in result]
+            
+            _discovery_cache['databases'] = {
+                'data': db_list,
+                'expires': now + CACHE_TTL
+            }
+            return db_list
+        except Exception as e:
+            print(f"Discovery Error (Databases): {str(e)}")
+            return []
 
     @staticmethod
     def list_tables(database: str) -> List[str]:
-        conn = SQLServerConnection.get_connection(database=database)
-        query = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'"
-        result = SQLServerConnection.execute_query(conn, query)
-        return [row['TABLE_NAME'] for row in result]
+        now = time.time()
+        if database in _discovery_cache['tables'] and _discovery_cache['tables'][database]['expires'] > now:
+            return _discovery_cache['tables'][database]['data']
+
+        try:
+            conn = SQLServerConnection.get_connection(database=database)
+            # Optimized query for tables
+            query = "SELECT s.name + '.' + t.name as TABLE_NAME FROM sys.tables t INNER JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE t.is_ms_shipped = 0"
+            result = SQLServerConnection.execute_query(conn, query, close_conn=False)
+            table_list = [row['TABLE_NAME'] for row in result]
+            
+            _discovery_cache['tables'][database] = {
+                'data': table_list,
+                'expires': now + CACHE_TTL
+            }
+            return table_list
+        except Exception as e:
+            print(f"Discovery Error (Tables for {database}): {str(e)}")
+            return []

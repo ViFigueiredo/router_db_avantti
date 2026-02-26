@@ -10,8 +10,17 @@ export default defineNuxtConfig({
   ],
   primevue: {
     options: {
-      ripple: true,
-      inputVariant: 'filled'
+      theme: {
+        preset: 'Aura',
+        options: {
+          darkModeSelector: '.dark',
+          cssLayer: {
+            name: 'primevue',
+            order: 'tailwind-base, primevue, tailwind-utilities'
+          }
+        }
+      },
+      ripple: true
     },
     autoImport: true
   },
