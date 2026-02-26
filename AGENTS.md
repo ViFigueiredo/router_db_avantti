@@ -12,21 +12,24 @@ Este documento define as principais regras, tecnologias e padrões a serem segui
 
 ## 4. Estrutura de Pastas
 
-- `prisma/`: Definições do banco de dados (Neon/PostgreSQL).
-- `server/api/projects/`: Gestão de tenants (projetos).
-- `server/api/query/`: Endpoint principal para execução de queries no SQL Server.
-- `server/middleware/`: Autenticação via API Key.
-- `server/utils/`: Utilitários para Prisma e SQL Server.
+- `backend/app/`: Backend em Python (FastAPI).
+  - `models.py`: Modelos SQLAlchemy para SQLite.
+  - `schemas.py`: Esquemas Pydantic para validação.
+  - `database.py`: Gerenciamento de SQLite e SQL Server.
+  - `auth.py`: Autenticação via API Key.
+  - `routes/`: Endpoints de Projetos e Queries.
+- `app/`: Frontend Nuxt (Vue 3).
+- `server/`: Backend Nuxt (usado apenas como proxy ou funções mínimas, lógica principal em Python).
 
 ## 5. Configuração e Integrações
 
 ### 5.1 Variáveis de Ambiente Gerais
-- `DATABASE_URL`: URL do banco de dados principal (PostgreSQL/Neon).
-- `JWT_SECRET`: Segredo para tokens (se usado).
+- `API_URL`: URL base do backend Python (ex: `http://localhost:8000`).
+- `SQLITE_DB_PATH`: Caminho do banco de dados SQLite principal.
 - `API_KEY_HEADER`: Nome do header de autenticação (padrão: `x-api-key`).
 
 ### 5.2 Autenticação e Sessão
-- Autenticação baseada em API Key por projeto. Cada projeto cadastrado no banco principal possui uma `apiKey` única que deve ser enviada no header `x-api-key`.
+- Autenticação baseada em API Key por projeto, validada pelo backend Python. Cada projeto cadastrado possui uma `api_key` única.
 
 ### 5.3Monitoramento (Sentry)
 

@@ -13,7 +13,8 @@ export default defineNuxtConfig({
     }
   },
   runtimeConfig: {
-    databaseUrl: process.env.DATABASE_URL,
-    jwtSecret: process.env.JWT_SECRET
+    public: {
+      apiUrl: process.env.API_URL || 'http://localhost:8000'
+    }
   }
 })

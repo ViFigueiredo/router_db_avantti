@@ -1,7 +1,7 @@
 # Memórias e Conhecimento Acumulado do Agente
 
 ## Decisões Arquiteturais
-- **Multi-tenant**: O sistema utiliza um banco PostgreSQL (Neon) central para armazenar as configurações de cada projeto/tenant, incluindo credenciais de seus respectivos SQL Servers.
-- **Conexão Dinâmica**: O router gerencia um pool de conexões dinâmicas para diferentes instâncias de SQL Server usando a biblioteca `mssql`.
-- **Segurança**: Cada projeto tem sua própria API Key. O middleware `server/middleware/auth.ts` valida a chave e injeta as configurações do banco no contexto da requisição.
-- **Validação**: Todas as entradas (criação de projeto e execução de query) são validadas com Zod.
+- **Backend Python (FastAPI)**: Migração do backend de Nuxt para Python para melhor performance e compatibilidade com drivers de banco de dados específicos.
+- **SQLite para Configurações**: Uso de SQLite local para armazenar configurações de projetos e tenants, simplificando o setup e eliminando a dependência de bancos externos (Neon/PostgreSQL) para metadados.
+- **Conexão Dinâmica SQL Server**: O backend Python utiliza `pymssql` para gerenciar conexões dinâmicas sob demanda.
+- **Segurança**: Autenticação via `x-api-key` no header, validada contra o banco SQLite.
