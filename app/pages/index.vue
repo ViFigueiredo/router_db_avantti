@@ -3,14 +3,14 @@ const { fetchApi } = useApi()
 
 const stats = ref({
   total_projects: 0,
-  total_requests: 15430, // Mocked for now
+  total_requests: 0,
   active_connections: 0,
-  avg_response_time: '45ms'
+  avg_response_time: '0ms'
 })
 
 const systemStatus = ref({
   api_gateway: 'online',
-  sql_server: 'connected',
+  sql_server: 'offline',
   discovery: 'active'
 })
 
@@ -26,18 +26,34 @@ const getStatusConfig = (status: string) => {
   return configs[status] || configs.offline
 }
 
-const recentActivity = ref([
-  { id: 1, type: 'query', project: 'CookPit', status: 'success', time: '2025-02-26 14:30:00', method: 'SELECT', query: 'SELECT * FROM Clientes', tables: 'Clientes', connections: 5, requests: 120, min_lat: '20ms', avg_lat: '45ms', max_lat: '150ms' },
-  { id: 2, type: 'query', project: 'CookPit', status: 'error', time: '2025-02-26 14:15:00', method: 'UPDATE', query: 'UPDATE Pedidos SET status = 1', tables: 'Pedidos', connections: 5, requests: 15, min_lat: '30ms', avg_lat: '60ms', max_lat: '200ms' },
-  { id: 3, type: 'connection', project: 'Novo Tenant', status: 'success', time: '2025-02-26 13:00:00', method: 'CONNECT', query: '-', tables: '-', connections: 1, requests: 5, min_lat: '10ms', avg_lat: '15ms', max_lat: '25ms' },
-  { id: 4, type: 'query', project: 'CookPit', status: 'success', time: '2025-02-26 12:30:00', method: 'SELECT', query: 'SELECT count(*) FROM Logs', tables: 'Logs', connections: 4, requests: 300, min_lat: '15ms', avg_lat: '35ms', max_lat: '100ms' },
-])
+const recentActivity = ref<any[]>([])
 
 const fetchStats = async () => {
   try {
-    const projects = await fetchApi('/api/projects/')
-    stats.value.total_projects = Array.isArray(projects) ? projects.length : 0
-    stats.value.active_connections = stats.value.total_projects // Assuming 1 conn per project for now
+    const [statsData, statusData, activityData] = await Promise.all([
+      fetchApi('/api/dashboard/stats'),
+      fetchApi('/api/dashboard/status'),
+      fetchApi('/api/dashboard/activity')
+    ])
+
+    stats.value = statsData as any
+    systemStatus.value = statusData as any
+
+    recentActivity.value = (activityData as any[]).map(log => ({
+      id: log.id,
+      project: log.project_id || 'System',
+      status: log.status_code >= 400 ? 'error' : 'success',
+      time: new Date(log.timestamp).toLocaleTimeString(),
+      method: log.method,
+      query: log.path,
+      tables: '-',
+      connections: '-',
+      requests: 1,
+      min_lat: '-',
+      avg_lat: `${log.duration_ms}ms`,
+      max_lat: '-'
+    }))
+
   } catch (error) {
     console.error('Error fetching dashboard stats:', error)
   }
@@ -67,9 +83,6 @@ onMounted(() => {
         <div class="flex flex-col gap-1 relative z-10">
           <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Projetos Ativos</span>
           <span class="text-4xl font-black text-slate-900 dark:text-white">{{ stats.total_projects }}</span>
-          <span class="text-xs font-medium text-emerald-500 mt-2 flex items-center gap-1">
-            <i class="pi pi-arrow-up text-[10px]" /> +2 essa semana
-          </span>
         </div>
       </div>
 
@@ -79,12 +92,8 @@ onMounted(() => {
           <i class="pi pi-bolt text-6xl text-amber-500" />
         </div>
         <div class="flex flex-col gap-1 relative z-10">
-          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Requisições (24h)</span>
-          <span class="text-4xl font-black text-slate-900 dark:text-white">{{ (stats.total_requests / 1000).toFixed(1)
-            }}k</span>
-          <span class="text-xs font-medium text-emerald-500 mt-2 flex items-center gap-1">
-            <i class="pi pi-arrow-up text-[10px]" /> +12% vs ontem
-          </span>
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Requisições</span>
+          <span class="text-4xl font-black text-slate-900 dark:text-white">{{ stats.total_requests }}</span>
         </div>
       </div>
 
@@ -96,7 +105,6 @@ onMounted(() => {
         <div class="flex flex-col gap-1 relative z-10">
           <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Conexões Ativas</span>
           <span class="text-4xl font-black text-slate-900 dark:text-white">{{ stats.active_connections }}</span>
-          <span class="text-xs font-medium text-slate-400 mt-2">Estável</span>
         </div>
       </div>
 
@@ -108,9 +116,6 @@ onMounted(() => {
         <div class="flex flex-col gap-1 relative z-10">
           <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Latência Média</span>
           <span class="text-4xl font-black text-slate-900 dark:text-white">{{ stats.avg_response_time }}</span>
-          <span class="text-xs font-medium text-emerald-500 mt-2 flex items-center gap-1">
-            <i class="pi pi-check-circle text-[10px]" /> Performance Ótima
-          </span>
         </div>
       </div>
     </div>
@@ -217,7 +222,7 @@ onMounted(() => {
                 <td class="p-4 align-top">
                   <div class="max-w-[200px] truncate">
                     <span class="text-xs font-mono text-slate-500 cursor-help" :title="activity.query">{{ activity.query
-                      }}</span>
+                    }}</span>
                   </div>
                 </td>
                 <td class="p-4 align-top">

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import init_db
-from .routes import projects, query
+from .routes import projects, query, dashboard
 from .logger import log_middleware, logger
 import uvicorn
 
@@ -28,6 +28,7 @@ async def add_logging_middleware(request, call_next):
 # Include routes
 app.include_router(projects.router, prefix="/api/projects", tags=["projects"])
 app.include_router(query.router, prefix="/api/query", tags=["query"])
+app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
 
 @app.get("/")
 def read_root():

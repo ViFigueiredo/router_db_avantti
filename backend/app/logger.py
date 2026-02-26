@@ -4,6 +4,8 @@ from datetime import datetime
 from fastapi import Request
 import time
 import json
+from .database import SessionLocal
+from .models import RequestLog
 
 # Ensure logs directory exists at root
 LOGS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "logs")
@@ -51,5 +53,22 @@ async def log_middleware(request: Request, call_next):
         logger.warning(f"Event: {json.dumps(log_dict)}")
     else:
         logger.info(f"Event: {json.dumps(log_dict)}")
+    
+    # Log to Database
+    try:
+        db = SessionLocal()
+        db_log = RequestLog(
+            timestamp=datetime.utcnow(),
+            method=request.method,
+            path=request.url.path,
+            status_code=response.status_code,
+            duration_ms=int(process_time),
+            client_ip=request.client.host if request.client else "unknown"
+        )
+        db.add(db_log)
+        db.commit()
+        db.close()
+    except Exception as e:
+        logger.error(f"Failed to log to DB: {e}")
 
     return response

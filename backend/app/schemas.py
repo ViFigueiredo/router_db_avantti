@@ -49,3 +49,28 @@ class DatabaseDiscovery(BaseModel):
 
 class TableDiscovery(BaseModel):
     tables: List[str]
+
+class DashboardStats(BaseModel):
+    total_projects: int
+    total_requests: int
+    active_connections: int
+    avg_response_time: str
+
+class SystemStatus(BaseModel):
+    api_gateway: str
+    sql_server: str
+    discovery: str
+
+class RequestLog(BaseModel):
+    id: int
+    timestamp: datetime
+    method: str
+    path: str
+    status_code: int
+    duration_ms: int
+    client_ip: str
+    project_id: Optional[str]
+    error_message: Optional[str]
+
+    class Config:
+        from_attributes = True

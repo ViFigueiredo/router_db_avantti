@@ -34,3 +34,16 @@ class DatabaseConnection(Base):
     project = relationship("Project", back_populates="database_connections")
 
     __table_args__ = (UniqueConstraint('project_id', 'type', name='_project_type_uc'),)
+
+class RequestLog(Base):
+    __tablename__ = "request_logs"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+    method = Column(String, index=True)
+    path = Column(String, index=True)
+    status_code = Column(Integer, index=True)
+    duration_ms = Column(Integer)
+    client_ip = Column(String)
+    project_id = Column(String, ForeignKey("projects.id"), nullable=True) # Optional link to project
+    error_message = Column(String, nullable=True)
