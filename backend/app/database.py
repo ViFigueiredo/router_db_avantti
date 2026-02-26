@@ -7,6 +7,8 @@ import pymssql
 from typing import List, Dict, Any, Optional
 import time
 import logging
+import socket
+from concurrent.futures import ThreadPoolExecutor, TimeoutError
 
 load_dotenv()
 
@@ -40,52 +42,73 @@ CACHE_TTL = 300 # 5 minutes
 
 # SQL Server Connection Management
 class SQLServerConnection:
-    _connection_pool = {} # Simple pool by database name
+    _connection_pool = {} 
+    _executor = ThreadPoolExecutor(max_workers=5)
 
     @staticmethod
     def get_global_config():
-        config = {
+        return {
             'host': os.getenv('SQL_SERVER_HOST', 'localhost'),
             'port': int(os.getenv('SQL_SERVER_PORT', '1433')),
             'username': os.getenv('SQL_SERVER_USER', 'sa'),
             'password': os.getenv('SQL_SERVER_PASSWORD', '')
         }
-        return config
+
+    @staticmethod
+    def check_port_open(host: str, port: int, timeout: int = 3) -> bool:
+        """Quick check if the TCP port is reachable before calling pymssql."""
+        try:
+            with socket.create_connection((host, port), timeout=timeout):
+                return True
+        except (socket.timeout, ConnectionRefusedError, OSError) as e:
+            logger.error(f"Port Pre-check Failed: {host}:{port} is unreachable. Error: {str(e)}")
+            return False
+
+    @staticmethod
+    def _create_pymssql_conn(config: dict, db_name: str):
+        return pymssql.connect(
+            server=config['host'],
+            port=config['port'],
+            user=config['username'],
+            password=config['password'],
+            database=db_name,
+            as_dict=True,
+            login_timeout=10,
+            timeout=30
+        )
 
     @staticmethod
     def get_connection(database: Optional[str] = None):
         db_name = database if database else 'master'
+        config = SQLServerConnection.get_global_config()
         
-        # Check if we have a valid cached connection
+        # 1. Check if cached connection is healthy
         if db_name in SQLServerConnection._connection_pool:
             conn = SQLServerConnection._connection_pool[db_name]
             try:
-                # Test connection health
                 cursor = conn.cursor()
                 cursor.execute("SELECT 1")
                 cursor.close()
                 return conn
-            except Exception as e:
-                logger.warning(f"Cached connection to {db_name} failed health check: {str(e)}")
+            except:
                 del SQLServerConnection._connection_pool[db_name]
 
-        config = SQLServerConnection.get_global_config()
-        logger.info(f"Connecting to SQL Server at {config['host']}:{config['port']} (Database: {db_name})...")
+        # 2. Pre-check port to avoid long hangs in pymssql
+        if not SQLServerConnection.check_port_open(config['host'], config['port']):
+            raise ConnectionError(f"SQL Server at {config['host']}:{config['port']} is unreachable. Check firewall and IP.")
+
+        # 3. Attempt connection with a hard thread timeout
+        logger.info(f"Connecting to SQL Server at {config['host']}:{config['port']} (DB: {db_name})...")
         
+        future = SQLServerConnection._executor.submit(SQLServerConnection._create_pymssql_conn, config, db_name)
         try:
-            conn = pymssql.connect(
-                server=config['host'],
-                port=config['port'],
-                user=config['username'],
-                password=config['password'],
-                database=db_name,
-                as_dict=True,
-                login_timeout=10, # Increased for slow networks
-                timeout=60
-            )
+            conn = future.result(timeout=15) # Hard 15s timeout for the connection attempt
             SQLServerConnection._connection_pool[db_name] = conn
             logger.info(f"Connected successfully to {db_name}")
             return conn
+        except TimeoutError:
+            logger.error(f"Connection attempt timed out after 15s for {db_name}")
+            raise ConnectionError("SQL Server connection timed out.")
         except Exception as e:
             logger.error(f"Failed to connect to SQL Server: {str(e)}")
             raise
@@ -111,7 +134,6 @@ class SQLServerConnection:
             cursor.close()
             if close_conn:
                 conn.close()
-                # Remove from pool if it was there
                 for db, c in list(SQLServerConnection._connection_pool.items()):
                     if c == conn:
                         del SQLServerConnection._connection_pool[db]
