@@ -234,10 +234,10 @@ onMounted(() => {
           <div class="flex flex-col gap-1.5">
             <label
               class="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest ml-1">Identificação</label>
-            <IconField>
+            <IconField class="w-full">
               <InputIcon class="pi pi-box" />
-              <InputText v-model="newProject.name" placeholder="Nome do Cliente / Projeto" class="w-full !rounded-xl"
-                size="small" />
+              <InputText v-model="newProject.name" placeholder="Nome do Cliente / Projeto"
+                class="w-full !pl-10 !rounded-xl" size="small" />
             </IconField>
           </div>
 
@@ -245,9 +245,9 @@ onMounted(() => {
             <label class="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest ml-1">Slug
               do
               Gateway</label>
-            <IconField>
+            <IconField class="w-full">
               <InputIcon class="pi pi-link" />
-              <InputText v-model="newProject.slug" placeholder="cliente-alpha" class="w-full !rounded-xl"
+              <InputText v-model="newProject.slug" placeholder="cliente-alpha" class="w-full !pl-10 !rounded-xl"
                 size="small" />
             </IconField>
           </div>
@@ -300,11 +300,11 @@ onMounted(() => {
 <style scoped>
 :deep(.p-select-label),
 :deep(.p-multiselect-label) {
-  @apply !p-4 !font-semibold !text-slate-700 dark:!text-slate-200;
+  @apply !p-4 !font-semibold !text-slate-700 dark: !text-slate-200;
 }
 
 :deep(.p-skeleton) {
-  @apply !bg-slate-100 dark:!bg-slate-800;
+  @apply !bg-slate-100 dark: !bg-slate-800;
 }
 
 .animate-in {
