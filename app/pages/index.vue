@@ -63,7 +63,7 @@ onMounted(() => {
         <div class="flex flex-col gap-1 relative z-10">
           <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Requisições (24h)</span>
           <span class="text-4xl font-black text-slate-900 dark:text-white">{{ (stats.total_requests / 1000).toFixed(1)
-            }}k</span>
+          }}k</span>
           <span class="text-xs font-medium text-emerald-500 mt-2 flex items-center gap-1">
             <i class="pi pi-arrow-up text-[10px]"></i> +12% vs ontem
           </span>
@@ -97,10 +97,42 @@ onMounted(() => {
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div class="flex flex-col lg:flex-row gap-8">
+      <!-- Quick Actions / Status -->
+      <div class="w-full lg:w-80 shrink-0 space-y-6 min-w-0">
+        <div
+          class="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 p-8 shadow-sm">
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-4 uppercase tracking-wider">Status do Sistema
+          </h3>
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-medium text-slate-500">API Gateway</span>
+              <span class="flex items-center gap-1.5 text-xs font-bold text-emerald-500">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                Online
+              </span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-medium text-slate-500">SQL Server</span>
+              <span class="flex items-center gap-1.5 text-xs font-bold text-emerald-500">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                Conectado
+              </span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-medium text-slate-500">Discovery Service</span>
+              <span class="flex items-center gap-1.5 text-xs font-bold text-emerald-500">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                Ativo
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Activity Feed -->
       <div
-        class="lg:col-span-9 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 p-8 shadow-sm min-w-0 overflow-hidden">
+        class="flex-1 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 p-8 shadow-sm min-w-0 overflow-hidden">
         <div class="flex items-center justify-between mb-8">
           <h3 class="text-xl font-bold text-slate-900 dark:text-white">Atividade Recente</h3>
           <Button label="Ver tudo" variant="text" size="small" class="!text-indigo-600 !font-bold" />
@@ -110,13 +142,13 @@ onMounted(() => {
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="border-b border-slate-100 dark:border-slate-800">
-                <th class="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 min-w-[150px]">Nome</th>
-                <th class="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 min-w-[150px]">Query</th>
-                <th class="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 min-w-[100px]">Tabelas</th>
-                <th class="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 min-w-[140px]">Data/Hora</th>
-                <th class="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 text-center">Conn</th>
-                <th class="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 text-center">Reqs</th>
-                <th class="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 text-center min-w-[140px]">Latência</th>
+                <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 min-w-[150px]">Nome</th>
+                <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 min-w-[150px]">Query</th>
+                <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 min-w-[100px]">Tabelas</th>
+                <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 min-w-[140px]">Data/Hora</th>
+                <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 text-center">Conn</th>
+                <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 text-center">Reqs</th>
+                <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 text-center min-w-[140px]">Latência</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50 dark:divide-slate-800/50">
@@ -161,40 +193,6 @@ onMounted(() => {
               </tr>
             </tbody>
           </table>
-        </div>
-      </div>
-
-      <!-- Quick Actions / Status -->
-      <div class="lg:col-span-3 space-y-6 min-w-0">
-        <!-- New Project Card Removed -->
-
-        <div
-          class="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 p-8 shadow-sm">
-          <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-4 uppercase tracking-wider">Status do Sistema
-          </h3>
-          <div class="space-y-4">
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-slate-500">API Gateway</span>
-              <span class="flex items-center gap-1.5 text-xs font-bold text-emerald-500">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                Online
-              </span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-slate-500">SQL Server</span>
-              <span class="flex items-center gap-1.5 text-xs font-bold text-emerald-500">
-                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                Conectado
-              </span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-slate-500">Discovery Service</span>
-              <span class="flex items-center gap-1.5 text-xs font-bold text-emerald-500">
-                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                Ativo
-              </span>
-            </div>
-          </div>
         </div>
       </div>
     </div>
