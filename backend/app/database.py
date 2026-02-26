@@ -6,8 +6,12 @@ from dotenv import load_dotenv
 import pymssql
 from typing import List, Dict, Any, Optional
 import time
+import logging
 
 load_dotenv()
+
+# Setup logger for discovery
+logger = logging.getLogger("router_db_backend.discovery")
 
 # SQLite Configuration for main storage
 SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_router.db"
@@ -40,12 +44,13 @@ class SQLServerConnection:
 
     @staticmethod
     def get_global_config():
-        return {
+        config = {
             'host': os.getenv('SQL_SERVER_HOST', 'localhost'),
             'port': int(os.getenv('SQL_SERVER_PORT', '1433')),
             'username': os.getenv('SQL_SERVER_USER', 'sa'),
             'password': os.getenv('SQL_SERVER_PASSWORD', '')
         }
+        return config
 
     @staticmethod
     def get_connection(database: Optional[str] = None):
@@ -60,24 +65,30 @@ class SQLServerConnection:
                 cursor.execute("SELECT 1")
                 cursor.close()
                 return conn
-            except:
-                # Connection is dead, remove it
+            except Exception as e:
+                logger.warning(f"Cached connection to {db_name} failed health check: {str(e)}")
                 del SQLServerConnection._connection_pool[db_name]
 
         config = SQLServerConnection.get_global_config()
-        conn = pymssql.connect(
-            server=config['host'],
-            port=config['port'],
-            user=config['username'],
-            password=config['password'],
-            database=db_name,
-            as_dict=True,
-            login_timeout=5, # Reduce timeout for faster feedback
-            timeout=30
-        )
-        # We don't close discovery connections immediately anymore to allow pooling
-        SQLServerConnection._connection_pool[db_name] = conn
-        return conn
+        logger.info(f"Connecting to SQL Server at {config['host']}:{config['port']} (Database: {db_name})...")
+        
+        try:
+            conn = pymssql.connect(
+                server=config['host'],
+                port=config['port'],
+                user=config['username'],
+                password=config['password'],
+                database=db_name,
+                as_dict=True,
+                login_timeout=10, # Increased for slow networks
+                timeout=60
+            )
+            SQLServerConnection._connection_pool[db_name] = conn
+            logger.info(f"Connected successfully to {db_name}")
+            return conn
+        except Exception as e:
+            logger.error(f"Failed to connect to SQL Server: {str(e)}")
+            raise
 
     @staticmethod
     def execute_query(conn, query: str, params: Optional[Dict[str, Any]] = None, close_conn: bool = True) -> List[Dict[str, Any]]:
@@ -93,6 +104,9 @@ class SQLServerConnection:
                 return result
             except pymssql.OperationalError:
                 return []
+        except Exception as e:
+            logger.error(f"SQL Query Execution Error: {str(e)}")
+            raise
         finally:
             cursor.close()
             if close_conn:
@@ -110,7 +124,6 @@ class SQLServerConnection:
 
         try:
             conn = SQLServerConnection.get_connection()
-            # Fast query for databases
             query = "SELECT name FROM sys.databases WHERE database_id > 4 AND state = 0" 
             result = SQLServerConnection.execute_query(conn, query, close_conn=False)
             db_list = [row['name'] for row in result]
@@ -121,7 +134,7 @@ class SQLServerConnection:
             }
             return db_list
         except Exception as e:
-            print(f"Discovery Error (Databases): {str(e)}")
+            logger.error(f"Discovery Error (Databases): {str(e)}")
             return []
 
     @staticmethod
@@ -132,7 +145,6 @@ class SQLServerConnection:
 
         try:
             conn = SQLServerConnection.get_connection(database=database)
-            # Optimized query for tables
             query = "SELECT s.name + '.' + t.name as TABLE_NAME FROM sys.tables t INNER JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE t.is_ms_shipped = 0"
             result = SQLServerConnection.execute_query(conn, query, close_conn=False)
             table_list = [row['TABLE_NAME'] for row in result]
@@ -143,5 +155,5 @@ class SQLServerConnection:
             }
             return table_list
         except Exception as e:
-            print(f"Discovery Error (Tables for {database}): {str(e)}")
+            logger.error(f"Discovery Error (Tables for {database}): {str(e)}")
             return []

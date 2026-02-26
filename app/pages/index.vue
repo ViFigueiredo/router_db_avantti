@@ -40,8 +40,12 @@ const fetchDatabases = async () => {
     isLoadingDiscovery.value = true
     const response: any = await fetchApi('/api/projects/discover/databases')
     availableDatabases.value = response.databases
+    if (availableDatabases.value.length === 0) {
+      toast.add({ severity: 'warn', summary: 'Aviso', detail: 'Nenhum banco de dados encontrado na instância.', life: 5000 })
+    }
   } catch (error: any) {
-    toast.add({ severity: 'error', summary: 'Erro de Conexão', detail: 'Verifique as credenciais globais no .env', life: 5000 })
+    toast.add({ severity: 'error', summary: 'Erro de Conexão', detail: 'Não foi possível conectar ao SQL Server. Verifique as credenciais no .env do backend.', life: 10000 })
+    console.error('Database Discovery Error:', error)
   } finally {
     isLoadingDiscovery.value = false
   }
