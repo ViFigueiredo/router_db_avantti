@@ -57,15 +57,20 @@ class SQLServerConnection:
     @staticmethod
     def check_port_open(host: str, port: int, timeout: int = 3) -> bool:
         """Quick check if the TCP port is reachable before calling pymssql."""
+        # Handle Named Instances: extract only the IP/Host part for the socket check
+        base_host = host.split('\\')[0] if '\\' in host else host
+        
         try:
-            with socket.create_connection((host, port), timeout=timeout):
+            logger.info(f"Pre-checking TCP connectivity to {base_host}:{port}...")
+            with socket.create_connection((base_host, port), timeout=timeout):
                 return True
         except (socket.timeout, ConnectionRefusedError, OSError) as e:
-            logger.error(f"Port Pre-check Failed: {host}:{port} is unreachable. Error: {str(e)}")
+            logger.error(f"Port Pre-check Failed: {base_host}:{port} is unreachable. Error: {str(e)}")
             return False
 
     @staticmethod
     def _create_pymssql_conn(config: dict, db_name: str):
+        # pymssql handles Named Instances in the 'server' parameter
         return pymssql.connect(
             server=config['host'],
             port=config['port'],
@@ -93,24 +98,26 @@ class SQLServerConnection:
             except:
                 del SQLServerConnection._connection_pool[db_name]
 
-        # 2. Pre-check port to avoid long hangs in pymssql
+        # 2. Pre-check port (using only base host for socket)
         if not SQLServerConnection.check_port_open(config['host'], config['port']):
-            raise ConnectionError(f"SQL Server at {config['host']}:{config['port']} is unreachable. Check firewall and IP.")
+            # Even if port check fails, we might still try pymssql as it might use dynamic ports 
+            # but for fixed ports it's a good indicator.
+            logger.warning(f"TCP Port {config['port']} seems closed on {config['host']}, but proceeding with pymssql attempt...")
 
         # 3. Attempt connection with a hard thread timeout
-        logger.info(f"Connecting to SQL Server at {config['host']}:{config['port']} (DB: {db_name})...")
+        logger.info(f"Attempting pymssql connection to: {config['host']} (Port: {config['port']}, DB: {db_name})...")
         
         future = SQLServerConnection._executor.submit(SQLServerConnection._create_pymssql_conn, config, db_name)
         try:
-            conn = future.result(timeout=15) # Hard 15s timeout for the connection attempt
+            conn = future.result(timeout=20) # 20s hard timeout
             SQLServerConnection._connection_pool[db_name] = conn
             logger.info(f"Connected successfully to {db_name}")
             return conn
         except TimeoutError:
-            logger.error(f"Connection attempt timed out after 15s for {db_name}")
-            raise ConnectionError("SQL Server connection timed out.")
+            logger.error(f"pymssql connection attempt timed out after 20s for {config['host']}")
+            raise ConnectionError("SQL Server connection timed out. Check IP/Instance and Port.")
         except Exception as e:
-            logger.error(f"Failed to connect to SQL Server: {str(e)}")
+            logger.error(f"pymssql failed to connect: {str(e)}")
             raise
 
     @staticmethod
