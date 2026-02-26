@@ -200,51 +200,51 @@ onMounted(() => {
       <div class="space-y-8 py-4">
         <div class="grid grid-cols-1 gap-6">
           <div class="flex flex-col gap-2">
-            <label class="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Identificação</label>
-            <InputText v-model="newProject.name" placeholder="Nome do Cliente / Projeto" class="!rounded-2xl !p-4 !bg-slate-50 !dark:bg-slate-800 !border-none focus:!ring-2 focus:!ring-indigo-500 transition-all" />
+            <label class="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest ml-1">Identificação</label>
+            <InputText v-model="newProject.name" placeholder="Nome do Cliente / Projeto" class="!rounded-2xl !p-4 !bg-slate-100/50 !dark:bg-slate-800/50 !border-slate-200 !dark:border-slate-700 focus:!ring-2 focus:!ring-indigo-500 transition-all" />
           </div>
           
           <div class="flex flex-col gap-2">
-            <label class="text-xs font-black text-slate-500 uppercase tracking-widest ml-1">Slug do Gateway</label>
+            <label class="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest ml-1">Slug do Gateway</label>
             <div class="relative">
-              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-sm">/</span>
-              <InputText v-model="newProject.slug" placeholder="cliente-alpha" class="w-full !pl-8 !rounded-2xl !p-4 !bg-slate-50 !dark:bg-slate-800 !border-none focus:!ring-2 focus:!ring-indigo-500 transition-all" />
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-mono text-sm">/</span>
+              <InputText v-model="newProject.slug" placeholder="cliente-alpha" class="w-full !pl-8 !rounded-2xl !p-4 !bg-slate-100/50 !dark:bg-slate-800/50 !border-slate-200 !dark:border-slate-700 focus:!ring-2 focus:!ring-indigo-500 transition-all" />
             </div>
           </div>
         </div>
 
-        <div class="bg-indigo-50 dark:bg-indigo-500/5 rounded-[2rem] p-8 border border-indigo-100 dark:border-indigo-500/10">
+        <div class="bg-indigo-50/50 dark:bg-indigo-500/5 rounded-[2rem] p-8 border border-indigo-100 dark:border-indigo-500/10">
           <div class="flex items-center gap-3 mb-6">
             <div class="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
               <i class="pi pi-database text-sm"></i>
             </div>
-            <span class="font-bold text-slate-900 dark:text-white">Conexão de Dados</span>
+            <span class="font-bold text-slate-800 dark:text-white">Conexão de Dados</span>
           </div>
 
           <div class="space-y-6">
             <div class="flex flex-col gap-2">
-              <label class="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest ml-1">Banco de Dados de Destino</label>
+              <label class="text-[10px] font-black text-indigo-700 dark:text-indigo-400 uppercase tracking-widest ml-1">Banco de Dados de Destino</label>
               <Select 
                 v-model="newProject.sqlServer.database" 
                 :options="availableDatabases" 
                 placeholder="Selecione na instância global..."
                 :loading="isLoadingDiscovery"
-                class="!rounded-xl !border-none !bg-white !dark:bg-slate-900 shadow-sm"
+                class="!rounded-xl !border-slate-200 !dark:border-slate-700 !bg-white !dark:bg-slate-900 shadow-sm"
               />
             </div>
             
             <div v-if="newProject.sqlServer.database" class="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-500">
-              <label class="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest ml-1">Tabelas Permitidas (Scope)</label>
+              <label class="text-[10px] font-black text-indigo-700 dark:text-indigo-400 uppercase tracking-widest ml-1">Tabelas Permitidas (Scope)</label>
               <MultiSelect 
                 v-model="selectedTables" 
                 :options="availableTables" 
                 placeholder="Selecione as tabelas..."
                 display="chip"
                 :loading="isLoadingDiscovery"
-                class="!rounded-xl !border-none !bg-white !dark:bg-slate-900 shadow-sm"
+                class="!rounded-xl !border-slate-200 !dark:border-slate-700 !bg-white !dark:bg-slate-900 shadow-sm"
                 filter
               />
-              <p class="text-[10px] text-slate-400 italic mt-1 ml-1">Vazio = Acesso total ao banco selecionado.</p>
+              <p class="text-[10px] text-slate-500 italic mt-1 ml-1">Vazio = Acesso total ao banco selecionado.</p>
             </div>
           </div>
         </div>

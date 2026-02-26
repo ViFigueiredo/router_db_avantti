@@ -168,18 +168,18 @@ body {
 }
 
 .p-dialog {
-  @apply rounded-3xl overflow-hidden border-none shadow-2xl shadow-indigo-500/10;
+  @apply rounded-3xl overflow-hidden border-none shadow-2xl shadow-indigo-500/10 bg-white dark:bg-slate-900;
 }
 
 .p-dialog-header {
-  @apply bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 p-6;
+  @apply bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 p-6;
 }
 
 .p-dialog-content {
-  @apply p-8;
+  @apply p-8 bg-white dark:bg-slate-900;
 }
 
 .p-dialog-footer {
-  @apply bg-slate-50 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 p-6;
+  @apply bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 p-6;
 }
 </style>
