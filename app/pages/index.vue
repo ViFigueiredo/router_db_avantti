@@ -300,11 +300,11 @@ onMounted(() => {
 <style scoped>
 :deep(.p-select-label),
 :deep(.p-multiselect-label) {
-  @apply !p-4 !font-semibold !text-slate-700 dark: !text-slate-200;
+  @apply !p-4 !font-semibold !text-slate-700 dark:!text-slate-200;
 }
 
 :deep(.p-skeleton) {
-  @apply !bg-slate-100 dark: !bg-slate-800;
+  @apply !bg-slate-100 dark:!bg-slate-800;
 }
 
 .animate-in {
