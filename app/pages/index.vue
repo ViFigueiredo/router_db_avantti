@@ -234,19 +234,22 @@ onMounted(() => {
           <div class="flex flex-col gap-1.5">
             <label
               class="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest ml-1">Identificação</label>
-            <InputText v-model="newProject.name" placeholder="Nome do Cliente / Projeto"
-              class="!rounded-xl !p-3 !bg-slate-100/50 !dark:bg-slate-800/50 !border-slate-200 !dark:border-slate-700 focus:!ring-2 focus:!ring-indigo-500 transition-all !text-sm" />
+            <IconField>
+              <InputIcon class="pi pi-box" />
+              <InputText v-model="newProject.name" placeholder="Nome do Cliente / Projeto" class="w-full !rounded-xl"
+                size="small" />
+            </IconField>
           </div>
 
           <div class="flex flex-col gap-1.5">
             <label class="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest ml-1">Slug
               do
               Gateway</label>
-            <div class="relative">
-              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-mono text-xs">/</span>
-              <InputText v-model="newProject.slug" placeholder="cliente-alpha"
-                class="w-full !pl-7 !rounded-xl !p-3 !bg-slate-100/50 !dark:bg-slate-800/50 !border-slate-200 !dark:border-slate-700 focus:!ring-2 focus:!ring-indigo-500 transition-all !text-sm" />
-            </div>
+            <IconField>
+              <InputIcon class="pi pi-link" />
+              <InputText v-model="newProject.slug" placeholder="cliente-alpha" class="w-full !rounded-xl"
+                size="small" />
+            </IconField>
           </div>
         </div>
 
@@ -266,8 +269,7 @@ onMounted(() => {
                 class="text-[9px] font-black text-indigo-700 dark:text-indigo-400 uppercase tracking-widest ml-1">Banco
                 de Dados</label>
               <Select v-model="newProject.sqlServer.database" :options="availableDatabases" placeholder="Selecione..."
-                :loading="isLoadingDiscovery"
-                class="!rounded-lg !border-slate-200 !dark:border-slate-700 !bg-white !dark:bg-slate-900 shadow-sm !text-sm" />
+                :loading="isLoadingDiscovery" class="w-full !rounded-xl" size="small" filter showClear />
             </div>
 
             <div v-if="newProject.sqlServer.database"
@@ -276,9 +278,8 @@ onMounted(() => {
                 class="text-[9px] font-black text-indigo-700 dark:text-indigo-400 uppercase tracking-widest ml-1">Tabelas
                 (Scope)</label>
               <MultiSelect v-model="selectedTables" :options="availableTables" placeholder="Selecione as tabelas..."
-                display="chip" :loading="isLoadingDiscovery"
-                class="!rounded-lg !border-slate-200 !dark:border-slate-700 !bg-white !dark:bg-slate-900 shadow-sm !text-sm"
-                filter />
+                display="chip" :loading="isLoadingDiscovery" class="w-full !rounded-xl" size="small" filter
+                :maxSelectedLabels="3" />
               <p class="text-[9px] text-slate-500 italic mt-0.5 ml-1">Vazio = Acesso total ao banco.</p>
             </div>
           </div>
@@ -287,10 +288,9 @@ onMounted(() => {
 
       <template #footer>
         <div class="flex justify-end gap-3">
-          <Button label="Cancelar" variant="text" class="!text-slate-500 !font-bold !text-xs"
-            @click="isModalOpen = false" />
-          <Button label="Finalizar e Gerar Key" icon="pi pi-bolt" @click="createProject"
-            class="!bg-indigo-600 !border-none !rounded-xl !px-6 !py-2.5 !font-bold !text-xs shadow-xl shadow-indigo-500/20" />
+          <Button label="Cancelar" variant="text" severity="secondary" @click="isModalOpen = false" size="small" />
+          <Button label="Finalizar e Gerar Key" icon="pi pi-bolt" @click="createProject" size="small"
+            class="!bg-indigo-600 !border-indigo-600" />
         </div>
       </template>
     </Dialog>
