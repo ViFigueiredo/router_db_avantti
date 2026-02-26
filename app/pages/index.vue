@@ -63,7 +63,7 @@ onMounted(() => {
         <div class="flex flex-col gap-1 relative z-10">
           <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Requisições (24h)</span>
           <span class="text-4xl font-black text-slate-900 dark:text-white">{{ (stats.total_requests / 1000).toFixed(1)
-            }}k</span>
+          }}k</span>
           <span class="text-xs font-medium text-emerald-500 mt-2 flex items-center gap-1">
             <i class="pi pi-arrow-up text-[10px]"></i> +12% vs ontem
           </span>
@@ -107,39 +107,61 @@ onMounted(() => {
         </div>
 
         <DataTable :value="recentActivity" stripedRows responsiveLayout="scroll" size="small" class="modern-table">
-          <Column field="project" header="Projeto">
+          <Column field="project" header="Nome">
             <template #body="{ data }">
-              <span class="font-bold text-slate-700 dark:text-slate-300">{{ data.project }}</span>
-            </template>
-          </Column>
-          <Column field="method" header="Tipo">
-            <template #body="{ data }">
-              <span class="text-[10px] px-2 py-1 rounded-md font-mono font-bold uppercase tracking-wider"
-                :class="data.status === 'success' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400'">
-                {{ data.method }}
-              </span>
+              <div class="flex flex-col">
+                <span class="font-bold text-slate-700 dark:text-slate-300">{{ data.project }}</span>
+                <span class="text-[10px] text-slate-400">{{ data.method }}</span>
+              </div>
             </template>
           </Column>
           <Column field="query" header="Query" style="max-width: 200px">
             <template #body="{ data }">
-              <span class="text-xs font-mono text-slate-500 truncate block" :title="data.query">{{ data.query }}</span>
+              <span class="text-xs font-mono text-slate-500 truncate block cursor-help" v-tooltip.top="data.query">{{
+                data.query }}</span>
             </template>
           </Column>
-          <Column field="tables" header="Tabelas"></Column>
-          <Column field="connections" header="Conexões" class="text-center"></Column>
-          <Column field="requests" header="Reqs" class="text-center"></Column>
-          <Column header="Latência (Min/Méd/Max)">
+          <Column field="tables" header="Tabelas">
             <template #body="{ data }">
-              <div class="flex items-center gap-1 text-[10px] font-mono">
-                <span class="text-emerald-600">{{ data.min_lat }}</span> /
-                <span class="text-slate-600 dark:text-slate-400 font-bold">{{ data.avg_lat }}</span> /
-                <span class="text-amber-600">{{ data.max_lat }}</span>
-              </div>
+              <span
+                class="text-xs font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">{{
+                data.tables }}</span>
             </template>
           </Column>
           <Column field="time" header="Data/Hora">
             <template #body="{ data }">
-              <span class="text-xs text-slate-400">{{ new Date(data.time).toLocaleTimeString() }}</span>
+              <span class="text-xs text-slate-500 font-mono">{{ new Date(data.time).toLocaleString() }}</span>
+            </template>
+          </Column>
+          <Column field="connections" header="Conexões" class="text-center">
+            <template #body="{ data }">
+              <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400">{{ data.connections }}</span>
+            </template>
+          </Column>
+          <Column field="requests" header="Reqs" class="text-center">
+            <template #body="{ data }">
+              <span class="text-xs font-bold text-slate-600 dark:text-slate-400">{{ data.requests }}</span>
+            </template>
+          </Column>
+          <Column field="min_lat" header="Lat. Mín" class="text-center">
+            <template #body="{ data }">
+              <span
+                class="text-[10px] font-mono text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded">{{
+                data.min_lat }}</span>
+            </template>
+          </Column>
+          <Column field="avg_lat" header="Lat. Méd" class="text-center">
+            <template #body="{ data }">
+              <span
+                class="text-[10px] font-mono text-blue-600 bg-blue-50 dark:bg-blue-500/10 px-1.5 py-0.5 rounded font-bold">{{
+                data.avg_lat }}</span>
+            </template>
+          </Column>
+          <Column field="max_lat" header="Lat. Máx" class="text-center">
+            <template #body="{ data }">
+              <span
+                class="text-[10px] font-mono text-amber-600 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded">{{
+                data.max_lat }}</span>
             </template>
           </Column>
         </DataTable>
@@ -185,5 +207,17 @@ onMounted(() => {
 <style scoped>
 .animate-in {
   animation-fill-mode: forwards;
+}
+
+:deep(.modern-table) {
+  @apply text-sm;
+}
+
+:deep(.modern-table .p-datatable-thead > tr > th) {
+  @apply bg-slate-50/50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 font-black uppercase text-[10px] tracking-widest border-b border-slate-100 dark:border-slate-800 p-4 whitespace-nowrap;
+}
+
+:deep(.modern-table .p-datatable-tbody > tr > td) {
+  @apply p-4 text-slate-600 dark:text-slate-400 border-slate-50 dark:border-slate-800/50 font-medium;
 }
 </style>
