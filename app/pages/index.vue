@@ -288,9 +288,10 @@ onMounted(() => {
 
       <template #footer>
         <div class="flex justify-end gap-3">
-          <Button label="Cancelar" variant="text" severity="secondary" @click="isModalOpen = false" size="small" />
+          <Button label="Cancelar" variant="text" severity="secondary" @click="isModalOpen = false" size="small"
+            class="!rounded-xl" />
           <Button label="Finalizar e Gerar Key" icon="pi pi-bolt" @click="createProject" size="small"
-            class="!bg-indigo-600 !border-indigo-600 !text-white !font-bold !px-4" />
+            class="!bg-indigo-600 !border-indigo-600 !text-white !font-bold !px-4 !rounded-xl" />
         </div>
       </template>
     </Dialog>
