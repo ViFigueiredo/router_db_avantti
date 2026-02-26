@@ -21,11 +21,14 @@ const newProject = ref({
   slug: '',
   sqlServer: {
     database: '',
-    allowed_tables: ''
+    allowed_tables: '',
+    allowed_methods: ''
   }
 })
 
 const selectedTables = ref<string[]>([])
+const selectedMethods = ref<string[]>(['GET'])
+const availableMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
 
 const fetchProjects = async () => {
   try {
@@ -99,10 +102,12 @@ const createProject = async () => {
 
   try {
     const payload = {
-      ...newProject.value,
+      name: newProject.value.name,
+      slug: newProject.value.slug,
       sql_server: {
-        ...newProject.value.sqlServer,
-        allowed_tables: selectedTables.value.join(',')
+        database: newProject.value.sqlServer.database,
+        allowed_tables: selectedTables.value.join(','),
+        allowed_methods: selectedMethods.value.join(',')
       }
     }
 
@@ -135,9 +140,10 @@ const resetForm = () => {
   newProject.value = {
     name: '',
     slug: '',
-    sqlServer: { database: '', allowed_tables: '' }
+    sqlServer: { database: '', allowed_tables: '', allowed_methods: '' }
   }
   selectedTables.value = []
+  selectedMethods.value = ['GET']
   isEditing.value = false
   editingId.value = ''
 }
@@ -155,14 +161,18 @@ const editProject = (project: any) => {
     slug: project.slug,
     sqlServer: {
       database: project.database_connections[0]?.database || '',
-      allowed_tables: ''
+      allowed_tables: '',
+      allowed_methods: ''
     }
   }
 
-  if (project.database_connections[0]?.allowed_tables) {
-    selectedTables.value = project.database_connections[0].allowed_tables.split(',').filter((t: string) => t)
+  const conn = project.database_connections[0]
+  if (conn) {
+    selectedTables.value = conn.allowed_tables ? conn.allowed_tables.split(',').filter((t: string) => t) : []
+    selectedMethods.value = conn.allowed_methods ? conn.allowed_methods.split(',').filter((m: string) => m) : ['GET']
   } else {
     selectedTables.value = []
+    selectedMethods.value = ['GET']
   }
 
   isModalOpen.value = true
@@ -204,17 +214,16 @@ onMounted(() => {
   <div class="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
     <!-- Hero Header -->
     <div class="relative overflow-hidden bg-slate-900 rounded-[2.5rem] p-12 text-white shadow-2xl shadow-indigo-500/20">
-      <div class="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-indigo-500/20 rounded-full blur-[100px]"/>
-      <div class="absolute bottom-0 left-0 -mb-20 -ml-20 w-72 h-72 bg-purple-500/10 rounded-full blur-[80px]"/>
+      <div class="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-indigo-500/20 rounded-full blur-[100px]" />
+      <div class="absolute bottom-0 left-0 -mb-20 -ml-20 w-72 h-72 bg-purple-500/10 rounded-full blur-[80px]" />
 
       <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
         <div>
           <div
             class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-[10px] font-bold uppercase tracking-widest mb-4">
             <span class="relative flex h-2 w-2">
-              <span
-                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"/>
-              <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"/>
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500" />
             </span>
             Painel de Controle
           </div>
@@ -246,7 +255,7 @@ v-else-if="projects.length === 0"
       class="flex flex-col items-center justify-center py-32 bg-white dark:bg-slate-900 rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-slate-800 transition-all hover:border-indigo-500 group">
       <div
         class="w-24 h-24 bg-slate-50 dark:bg-slate-800 rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-        <i class="pi pi-box text-5xl text-slate-300 group-hover:text-indigo-500"/>
+        <i class="pi pi-box text-5xl text-slate-300 group-hover:text-indigo-500" />
       </div>
       <h3 class="text-2xl font-bold text-slate-900 dark:text-white">Nenhum projeto ainda</h3>
       <p class="text-slate-500 dark:text-slate-400 mt-2 font-medium">Comece criando seu primeiro tenant agora mesmo.</p>
@@ -263,7 +272,7 @@ v-for="project in projects" :key="project.id"
           <div class="flex justify-between items-start mb-6">
             <div
               class="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-500">
-              <i class="pi pi-database text-xl"/>
+              <i class="pi pi-database text-xl" />
             </div>
             <Tag
 :value="project.database_connections[0]?.database" severity="secondary"
@@ -280,7 +289,8 @@ v-for="project in projects" :key="project.id"
               <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Chave de Acesso</span>
               <i
 v-tooltip="'Copiar API Key'"
-                class="pi pi-copy text-slate-300 hover:text-indigo-500 cursor-pointer transition-colors" @click="copyApiKey(project.api_key)"/>
+                class="pi pi-copy text-slate-300 hover:text-indigo-500 cursor-pointer transition-colors"
+                @click="copyApiKey(project.api_key)" />
             </div>
             <code
               class="text-xs text-slate-600 dark:text-slate-300 break-all select-all block font-mono">{{ project.api_key }}</code>
@@ -290,13 +300,13 @@ v-tooltip="'Copiar API Key'"
             <span>Criado em {{ new Date(project.created_at).toLocaleDateString() }}</span>
             <div class="flex gap-2">
               <Button
-v-tooltip="'Editar'" icon="pi pi-pencil" rounded text
-                size="small"
-                class="!w-7 !h-7 !text-slate-400 hover:!text-indigo-500 hover:!bg-indigo-50 dark:hover:!bg-indigo-500/10" @click="editProject(project)" />
+v-tooltip="'Editar'" icon="pi pi-pencil" rounded text size="small"
+                class="!w-7 !h-7 !text-slate-400 hover:!text-indigo-500 hover:!bg-indigo-50 dark:hover:!bg-indigo-500/10"
+                @click="editProject(project)" />
               <Button
-v-tooltip="'Excluir'" icon="pi pi-trash" rounded text
-                size="small"
-                class="!w-7 !h-7 !text-slate-400 hover:!text-red-500 hover:!bg-red-50 dark:hover:!bg-red-500/10" @click="deleteProject(project.id)" />
+v-tooltip="'Excluir'" icon="pi pi-trash" rounded text size="small"
+                class="!w-7 !h-7 !text-slate-400 hover:!text-red-500 hover:!bg-red-50 dark:hover:!bg-red-500/10"
+                @click="deleteProject(project.id)" />
             </div>
           </div>
         </div>
@@ -347,7 +357,7 @@ v-model="newProject.slug" placeholder="cliente-alpha" class="w-full !pl-10 !roun
           <div class="flex items-center gap-2.5 mb-4">
             <div
               class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
-              <i class="pi pi-database text-xs"/>
+              <i class="pi pi-database text-xs" />
             </div>
             <span class="font-bold text-sm text-slate-800 dark:text-white">Conexão de Dados</span>
           </div>
@@ -374,6 +384,15 @@ v-model="selectedTables" :options="availableTables" placeholder="Selecione as ta
                 selected-items-label="{0} tabelas selecionadas" />
               <p class="text-[9px] text-slate-500 italic mt-0.5 ml-1">Vazio = Acesso total ao banco.</p>
             </div>
+
+            <div class="flex flex-col gap-1.5 animate-in fade-in slide-in-from-top-2 duration-500">
+              <label
+                class="text-[9px] font-black text-indigo-700 dark:text-indigo-400 uppercase tracking-widest ml-1">Métodos
+                Permitidos</label>
+              <MultiSelect
+v-model="selectedMethods" :options="availableMethods" placeholder="Selecione os métodos..."
+                class="w-full !rounded-xl" size="small" :max-selected-labels="3" />
+            </div>
           </div>
         </div>
       </div>
@@ -384,9 +403,8 @@ v-model="selectedTables" :options="availableTables" placeholder="Selecione as ta
 label="Cancelar" variant="text" severity="secondary" size="small" class="!rounded-xl"
             @click="isModalOpen = false" />
           <Button
-:label="isEditing ? 'Salvar Alterações' : 'Finalizar e Gerar Key'" icon="pi pi-bolt"
-            size="small" class="!bg-indigo-600 !border-indigo-600 !text-white !font-bold !px-4 !rounded-xl"
-            @click="createProject" />
+:label="isEditing ? 'Salvar Alterações' : 'Finalizar e Gerar Key'" icon="pi pi-bolt" size="small"
+            class="!bg-indigo-600 !border-indigo-600 !text-white !font-bold !px-4 !rounded-xl" @click="createProject" />
         </div>
       </template>
     </Dialog>

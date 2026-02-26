@@ -6,6 +6,7 @@ class DatabaseConnectionBase(BaseModel):
     type: str = "SQLSERVER"
     database: str
     allowed_tables: Optional[str] = None
+    allowed_methods: Optional[str] = "GET"
 
 class DatabaseConnectionCreate(DatabaseConnectionBase):
     pass

@@ -28,6 +28,7 @@ class DatabaseConnection(Base):
     type = Column(String, default="SQLSERVER")
     database = Column(String, nullable=False)
     allowed_tables = Column(Text, nullable=True) # Comma separated or JSON string
+    allowed_methods = Column(String, nullable=True, default="GET") # Comma separated: GET,POST,PUT,DELETE
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
