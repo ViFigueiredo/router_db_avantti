@@ -278,8 +278,8 @@ onMounted(() => {
                 class="text-[9px] font-black text-indigo-700 dark:text-indigo-400 uppercase tracking-widest ml-1">Tabelas
                 (Scope)</label>
               <MultiSelect v-model="selectedTables" :options="availableTables" placeholder="Selecione as tabelas..."
-                display="chip" :loading="isLoadingDiscovery" class="w-full !rounded-xl" size="small" filter
-                :maxSelectedLabels="3" />
+                :loading="isLoadingDiscovery" class="w-full !rounded-xl" size="small" filter :maxSelectedLabels="2"
+                selectedItemsLabel="{0} tabelas selecionadas" />
               <p class="text-[9px] text-slate-500 italic mt-0.5 ml-1">Vazio = Acesso total ao banco.</p>
             </div>
           </div>
