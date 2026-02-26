@@ -4,6 +4,13 @@ Este documento define as principais regras, tecnologias e padrões a serem segui
 
 ## 1. Stack Tecnológica
 
+- **Frontend**: Nuxt 4, Vue 3, PrimeVue, Tailwind CSS.
+- **Backend**: FastAPI (Python 3.11+), SQLAlchemy.
+- **Bancos de Dados**:
+  - **SQLite**: Armazenamento local de metadados e configurações de tenants.
+  - **SQL Server**: Gateway de conexão para bancos de dados externos via `pymssql`.
+- **Utilitários**: Pydantic, Uvicorn, Concurrently.
+
 ## 2. Padrões de Código
 
 ## 3. UI/UX
@@ -20,7 +27,7 @@ Este documento define as principais regras, tecnologias e padrões a serem segui
   - `logger.py`: Configuração de logging do backend.
   - `routes/`: Endpoints de Projetos e Queries.
 - `logs/`: Diretório de logs (backend e frontend).
-- `app/`: Frontend Nuxt (Vue 3).
+- `app/`: Frontend Nuxt 4 (Vue 3) com **PrimeVue** e **Tailwind CSS**.
 - `server/plugins/`: Plugins Nitro (incluindo logger do servidor).
 - `app/plugins/`: Plugins Nuxt (incluindo handler de erro do cliente).
 

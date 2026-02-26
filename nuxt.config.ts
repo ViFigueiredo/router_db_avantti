@@ -5,7 +5,18 @@ export default defineNuxtConfig({
   modules: [
     'nuxt-security',
     '@nuxt/eslint',
-    '@nuxt/ui'
+    '@primevue/nuxt-module',
+    '@nuxtjs/tailwindcss'
+  ],
+  primevue: {
+    options: {
+      ripple: true,
+      inputVariant: 'filled'
+    },
+    autoImport: true
+  },
+  css: [
+    'primeicons/primeicons.css'
   ],
   security: {
     corsHandler: {

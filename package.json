@@ -15,8 +15,11 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
+    "@primevue/nuxt-module": "^4.5.4",
     "nuxt": "^4.3.1",
     "nuxt-security": "^2.5.1",
+    "primeicons": "^7.0.0",
+    "primevue": "^4.5.4",
     "vue": "^3.5.28",
     "vue-router": "^4.6.4",
     "zod": "^4.3.6"
@@ -25,7 +28,6 @@
   "devDependencies": {
     "@nuxt/eslint": "^1.15.2",
     "@nuxt/eslint-config": "^1.15.2",
-    "@nuxt/ui": "^4.5.0",
     "@nuxtjs/tailwindcss": "^6.14.0",
     "concurrently": "^9.2.1",
     "eslint": "^10.0.2",
