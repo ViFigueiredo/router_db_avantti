@@ -185,4 +185,29 @@ body {
 .p-dialog-footer {
   @apply bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 p-6;
 }
+
+/* Fix transparency in PrimeVue Select/Dropdown lists */
+.p-select-overlay, .p-multiselect-overlay, .p-dropdown-panel {
+  @apply bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl !important;
+  opacity: 1 !important;
+  background-color: rgb(255, 255, 255) !important;
+  z-index: 2000 !important;
+}
+
+.dark .p-select-overlay, .dark .p-multiselect-overlay, .dark .p-dropdown-panel {
+  background-color: rgb(15, 23, 42) !important; /* slate-900 */
+}
+
+.p-select-list-container, .p-multiselect-list-container, .p-dropdown-items-wrapper {
+  @apply bg-white dark:bg-slate-900 !important;
+  background-color: rgb(255, 255, 255) !important;
+}
+
+.dark .p-select-list-container, .dark .p-multiselect-list-container, .dark .p-dropdown-items-wrapper {
+  background-color: rgb(15, 23, 42) !important;
+}
+
+.p-select-option, .p-multiselect-option {
+  @apply text-slate-700 dark:text-slate-300 !important;
+}
 </style>
