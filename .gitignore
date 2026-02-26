@@ -6,22 +6,27 @@
 .cache
 dist
 
-# Node dependencies
-node_modules
-.venv
-venv
-env
+# Dependencies
+node_modules/
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local environment and databases
+.env
+.env.*
+!.env.example
+*.db
+*.sqlite
 
 # Logs
-logs
+logs/
 *.log
 
 # Misc
 .DS_Store
 .fleet
 .idea
-
-# Local env files
-.env
-.env.*
-!.env.example

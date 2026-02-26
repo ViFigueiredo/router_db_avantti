@@ -17,9 +17,12 @@ Este documento define as principais regras, tecnologias e padrões a serem segui
   - `schemas.py`: Esquemas Pydantic para validação.
   - `database.py`: Gerenciamento de SQLite e SQL Server.
   - `auth.py`: Autenticação via API Key.
+  - `logger.py`: Configuração de logging do backend.
   - `routes/`: Endpoints de Projetos e Queries.
+- `logs/`: Diretório de logs (backend e frontend).
 - `app/`: Frontend Nuxt (Vue 3).
-- `server/`: Backend Nuxt (usado apenas como proxy ou funções mínimas, lógica principal em Python).
+- `server/plugins/`: Plugins Nitro (incluindo logger do servidor).
+- `app/plugins/`: Plugins Nuxt (incluindo handler de erro do cliente).
 
 ## 5. Configuração e Integrações
 

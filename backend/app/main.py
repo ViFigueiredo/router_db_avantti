@@ -2,12 +2,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import init_db
 from .routes import projects, query
+from .logger import log_middleware, logger
 import uvicorn
 
 app = FastAPI(title="Router API DB - Python Backend")
 
 # Initialize database
 init_db()
+logger.info("Database initialized")
 
 # CORS Configuration
 app.add_middleware(
@@ -17,6 +19,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add logging middleware
+@app.middleware("http")
+async def add_logging_middleware(request, call_next):
+    return await log_middleware(request, call_next)
 
 # Include routes
 app.include_router(projects.router, prefix="/api/projects", tags=["projects"])
