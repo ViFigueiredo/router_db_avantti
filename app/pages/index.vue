@@ -61,6 +61,22 @@ const fetchTables = async (dbName: string) => {
   }
 }
 
+const slugify = (text: string) => {
+  return text
+    .toString()
+    .normalize('NFD')                   // Normalize special characters
+    .replace(/[\u0300-\u036f]/g, '')    // Remove accents
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')               // Replace spaces with -
+    .replace(/[^\w-]+/g, '')            // Remove all non-word chars
+    .replace(/--+/g, '-')               // Replace multiple - with single -
+}
+
+watch(() => newProject.value.name, (newName) => {
+  newProject.value.slug = slugify(newName)
+})
+
 watch(() => newProject.value.sqlServer.database, (newDb) => {
   if (newDb) fetchTables(newDb)
   else availableTables.value = []
