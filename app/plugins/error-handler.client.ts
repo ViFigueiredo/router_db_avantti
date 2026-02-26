@@ -22,7 +22,7 @@ export default defineNuxtPlugin((nuxtApp) => {
   }
 
   // Also catch unhandled rejections
-  if (process.client) {
+  if (import.meta.client) {
     window.addEventListener('unhandledrejection', (event) => {
       const route = useRoute()
       $fetch('/api/log', {

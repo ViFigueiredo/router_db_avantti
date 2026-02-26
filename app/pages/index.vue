@@ -8,6 +8,24 @@ const stats = ref({
   avg_response_time: '45ms'
 })
 
+const systemStatus = ref({
+  api_gateway: 'online',
+  sql_server: 'connected',
+  discovery: 'active'
+})
+
+const getStatusConfig = (status: string) => {
+  const configs: Record<string, { color: string; dot: string; ping: string; label: string }> = {
+    online: { color: 'text-emerald-500', dot: 'bg-emerald-500', ping: 'bg-emerald-400', label: 'Online' },
+    connected: { color: 'text-emerald-500', dot: 'bg-emerald-500', ping: 'bg-emerald-400', label: 'Conectado' },
+    active: { color: 'text-emerald-500', dot: 'bg-emerald-500', ping: 'bg-emerald-400', label: 'Ativo' },
+    unstable: { color: 'text-amber-500', dot: 'bg-amber-500', ping: 'bg-amber-400', label: 'Instável' },
+    offline: { color: 'text-red-500', dot: 'bg-red-500', ping: 'bg-red-400', label: 'Offline' },
+    error: { color: 'text-red-500', dot: 'bg-red-500', ping: 'bg-red-400', label: 'Erro' }
+  }
+  return configs[status] || configs.offline
+}
+
 const recentActivity = ref([
   { id: 1, type: 'query', project: 'CookPit', status: 'success', time: '2025-02-26 14:30:00', method: 'SELECT', query: 'SELECT * FROM Clientes', tables: 'Clientes', connections: 5, requests: 120, min_lat: '20ms', avg_lat: '45ms', max_lat: '150ms' },
   { id: 2, type: 'query', project: 'CookPit', status: 'error', time: '2025-02-26 14:15:00', method: 'UPDATE', query: 'UPDATE Pedidos SET status = 1', tables: 'Pedidos', connections: 5, requests: 15, min_lat: '30ms', avg_lat: '60ms', max_lat: '200ms' },
@@ -44,13 +62,13 @@ onMounted(() => {
       <div
         class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group">
         <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-          <i class="pi pi-box text-6xl text-indigo-600"></i>
+          <i class="pi pi-box text-6xl text-indigo-600" />
         </div>
         <div class="flex flex-col gap-1 relative z-10">
           <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Projetos Ativos</span>
           <span class="text-4xl font-black text-slate-900 dark:text-white">{{ stats.total_projects }}</span>
           <span class="text-xs font-medium text-emerald-500 mt-2 flex items-center gap-1">
-            <i class="pi pi-arrow-up text-[10px]"></i> +2 essa semana
+            <i class="pi pi-arrow-up text-[10px]" /> +2 essa semana
           </span>
         </div>
       </div>
@@ -58,14 +76,14 @@ onMounted(() => {
       <div
         class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group">
         <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-          <i class="pi pi-bolt text-6xl text-amber-500"></i>
+          <i class="pi pi-bolt text-6xl text-amber-500" />
         </div>
         <div class="flex flex-col gap-1 relative z-10">
           <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Requisições (24h)</span>
           <span class="text-4xl font-black text-slate-900 dark:text-white">{{ (stats.total_requests / 1000).toFixed(1)
-          }}k</span>
+            }}k</span>
           <span class="text-xs font-medium text-emerald-500 mt-2 flex items-center gap-1">
-            <i class="pi pi-arrow-up text-[10px]"></i> +12% vs ontem
+            <i class="pi pi-arrow-up text-[10px]" /> +12% vs ontem
           </span>
         </div>
       </div>
@@ -73,7 +91,7 @@ onMounted(() => {
       <div
         class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group">
         <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-          <i class="pi pi-server text-6xl text-blue-500"></i>
+          <i class="pi pi-server text-6xl text-blue-500" />
         </div>
         <div class="flex flex-col gap-1 relative z-10">
           <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Conexões Ativas</span>
@@ -85,13 +103,13 @@ onMounted(() => {
       <div
         class="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group">
         <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-          <i class="pi pi-clock text-6xl text-purple-500"></i>
+          <i class="pi pi-clock text-6xl text-purple-500" />
         </div>
         <div class="flex flex-col gap-1 relative z-10">
           <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Latência Média</span>
           <span class="text-4xl font-black text-slate-900 dark:text-white">{{ stats.avg_response_time }}</span>
           <span class="text-xs font-medium text-emerald-500 mt-2 flex items-center gap-1">
-            <i class="pi pi-check-circle text-[10px]"></i> Performance Ótima
+            <i class="pi pi-check-circle text-[10px]" /> Performance Ótima
           </span>
         </div>
       </div>
@@ -102,28 +120,47 @@ onMounted(() => {
       <div class="w-full lg:w-80 shrink-0 space-y-6 min-w-0">
         <div
           class="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 p-8 shadow-sm">
-          <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-4 uppercase tracking-wider">Status do Sistema
-          </h3>
+          <div class="flex items-center justify-between mb-8">
+            <h3 class="text-xl font-bold text-slate-900 dark:text-white">Status do Sistema</h3>
+          </div>
           <div class="space-y-4">
             <div class="flex items-center justify-between">
-              <span class="text-sm font-medium text-slate-500">API Gateway</span>
-              <span class="flex items-center gap-1.5 text-xs font-bold text-emerald-500">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                Online
+              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">API Gateway</span>
+              <span class="flex items-center gap-2 text-xs font-bold"
+                :class="getStatusConfig(systemStatus.api_gateway).color">
+                <span class="relative flex h-2.5 w-2.5">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                    :class="getStatusConfig(systemStatus.api_gateway).ping"></span>
+                  <span class="relative inline-flex rounded-full h-2.5 w-2.5"
+                    :class="getStatusConfig(systemStatus.api_gateway).dot"></span>
+                </span>
+                {{ getStatusConfig(systemStatus.api_gateway).label }}
               </span>
             </div>
             <div class="flex items-center justify-between">
-              <span class="text-sm font-medium text-slate-500">SQL Server</span>
-              <span class="flex items-center gap-1.5 text-xs font-bold text-emerald-500">
-                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                Conectado
+              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">SQL Server</span>
+              <span class="flex items-center gap-2 text-xs font-bold"
+                :class="getStatusConfig(systemStatus.sql_server).color">
+                <span class="relative flex h-2.5 w-2.5">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                    :class="getStatusConfig(systemStatus.sql_server).ping"></span>
+                  <span class="relative inline-flex rounded-full h-2.5 w-2.5"
+                    :class="getStatusConfig(systemStatus.sql_server).dot"></span>
+                </span>
+                {{ getStatusConfig(systemStatus.sql_server).label }}
               </span>
             </div>
             <div class="flex items-center justify-between">
-              <span class="text-sm font-medium text-slate-500">Discovery Service</span>
-              <span class="flex items-center gap-1.5 text-xs font-bold text-emerald-500">
-                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                Ativo
+              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Discovery Service</span>
+              <span class="flex items-center gap-2 text-xs font-bold"
+                :class="getStatusConfig(systemStatus.discovery).color">
+                <span class="relative flex h-2.5 w-2.5">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                    :class="getStatusConfig(systemStatus.discovery).ping"></span>
+                  <span class="relative inline-flex rounded-full h-2.5 w-2.5"
+                    :class="getStatusConfig(systemStatus.discovery).dot"></span>
+                </span>
+                {{ getStatusConfig(systemStatus.discovery).label }}
               </span>
             </div>
           </div>
@@ -142,21 +179,36 @@ onMounted(() => {
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="border-b border-slate-100 dark:border-slate-800">
-                <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 min-w-[150px]">Nome</th>
-                <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 min-w-[150px]">Query</th>
-                <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 min-w-[100px]">Tabelas</th>
-                <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 min-w-[140px]">Data/Hora</th>
-                <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 text-center">Conn</th>
-                <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 text-center">Reqs</th>
-                <th class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 text-center min-w-[140px]">Latência</th>
+                <th
+                  class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 min-w-[150px]">
+                  Nome</th>
+                <th
+                  class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 min-w-[150px]">
+                  Query</th>
+                <th
+                  class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 min-w-[100px]">
+                  Tabelas</th>
+                <th
+                  class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 min-w-[140px]">
+                  Data/Hora</th>
+                <th
+                  class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 text-center">
+                  Conn</th>
+                <th
+                  class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 text-center">
+                  Reqs</th>
+                <th
+                  class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 text-center min-w-[140px]">
+                  Latência</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50 dark:divide-slate-800/50">
-              <tr v-for="activity in recentActivity" :key="activity.id" class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+              <tr v-for="activity in recentActivity" :key="activity.id"
+                class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                 <td class="p-4 align-top">
                   <div class="flex flex-col">
                     <span class="font-bold text-sm text-slate-700 dark:text-slate-300">{{ activity.project }}</span>
-                    <span class="text-[10px] font-bold uppercase tracking-wider mt-1" 
+                    <span class="text-[10px] font-bold uppercase tracking-wider mt-1"
                       :class="activity.status === 'success' ? 'text-emerald-500' : 'text-red-500'">
                       {{ activity.method }}
                     </span>
@@ -164,11 +216,13 @@ onMounted(() => {
                 </td>
                 <td class="p-4 align-top">
                   <div class="max-w-[200px] truncate">
-                    <span class="text-xs font-mono text-slate-500 cursor-help" :title="activity.query">{{ activity.query }}</span>
+                    <span class="text-xs font-mono text-slate-500 cursor-help" :title="activity.query">{{ activity.query
+                      }}</span>
                   </div>
                 </td>
                 <td class="p-4 align-top">
-                  <span class="inline-flex text-xs font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded whitespace-nowrap">
+                  <span
+                    class="inline-flex text-xs font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded whitespace-nowrap">
                     {{ activity.tables }}
                   </span>
                 </td>
@@ -183,11 +237,14 @@ onMounted(() => {
                 </td>
                 <td class="p-4 align-top">
                   <div class="flex items-center justify-center gap-1 text-[10px] font-mono">
-                    <span class="text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded">{{ activity.min_lat }}</span>
+                    <span class="text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded">{{
+                      activity.min_lat }}</span>
                     <span class="text-slate-400">/</span>
-                    <span class="text-blue-600 bg-blue-50 dark:bg-blue-500/10 px-1.5 py-0.5 rounded font-bold">{{ activity.avg_lat }}</span>
+                    <span class="text-blue-600 bg-blue-50 dark:bg-blue-500/10 px-1.5 py-0.5 rounded font-bold">{{
+                      activity.avg_lat }}</span>
                     <span class="text-slate-400">/</span>
-                    <span class="text-amber-600 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded">{{ activity.max_lat }}</span>
+                    <span class="text-amber-600 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded">{{
+                      activity.max_lat }}</span>
                   </div>
                 </td>
               </tr>

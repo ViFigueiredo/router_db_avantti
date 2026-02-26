@@ -204,8 +204,8 @@ onMounted(() => {
   <div class="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
     <!-- Hero Header -->
     <div class="relative overflow-hidden bg-slate-900 rounded-[2.5rem] p-12 text-white shadow-2xl shadow-indigo-500/20">
-      <div class="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-indigo-500/20 rounded-full blur-[100px]"></div>
-      <div class="absolute bottom-0 left-0 -mb-20 -ml-20 w-72 h-72 bg-purple-500/10 rounded-full blur-[80px]"></div>
+      <div class="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-indigo-500/20 rounded-full blur-[100px]"/>
+      <div class="absolute bottom-0 left-0 -mb-20 -ml-20 w-72 h-72 bg-purple-500/10 rounded-full blur-[80px]"/>
 
       <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
         <div>
@@ -213,8 +213,8 @@ onMounted(() => {
             class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-[10px] font-bold uppercase tracking-widest mb-4">
             <span class="relative flex h-2 w-2">
               <span
-                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"/>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"/>
             </span>
             Painel de Controle
           </div>
@@ -223,7 +223,8 @@ onMounted(() => {
             granulares às tabelas do SQL Server global.</p>
         </div>
 
-        <Button label="Novo Projeto" icon="pi pi-plus" size="large"
+        <Button
+label="Novo Projeto" icon="pi pi-plus" size="large"
           class="!bg-white !text-slate-900 !border-none !rounded-2xl !px-8 !py-4 !font-bold hover:!bg-indigo-50 transition-colors shadow-xl"
           @click="openNewProjectModal" />
       </div>
@@ -231,7 +232,8 @@ onMounted(() => {
 
     <!-- Content Section -->
     <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      <div v-for="i in 3" :key="i"
+      <div
+v-for="i in 3" :key="i"
         class="bg-white dark:bg-slate-900 rounded-[2rem] p-8 border border-slate-100 dark:border-slate-800">
         <Skeleton width="40%" height="1.5rem" class="mb-4" />
         <Skeleton width="80%" height="1rem" class="mb-8" />
@@ -239,28 +241,32 @@ onMounted(() => {
       </div>
     </div>
 
-    <div v-else-if="projects.length === 0"
+    <div
+v-else-if="projects.length === 0"
       class="flex flex-col items-center justify-center py-32 bg-white dark:bg-slate-900 rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-slate-800 transition-all hover:border-indigo-500 group">
       <div
         class="w-24 h-24 bg-slate-50 dark:bg-slate-800 rounded-3xl flex items-center justify-center mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
-        <i class="pi pi-box text-5xl text-slate-300 group-hover:text-indigo-500"></i>
+        <i class="pi pi-box text-5xl text-slate-300 group-hover:text-indigo-500"/>
       </div>
       <h3 class="text-2xl font-bold text-slate-900 dark:text-white">Nenhum projeto ainda</h3>
       <p class="text-slate-500 dark:text-slate-400 mt-2 font-medium">Comece criando seu primeiro tenant agora mesmo.</p>
-      <Button label="Criar Primeiro Projeto" variant="text" class="mt-6 !font-bold !text-indigo-600"
+      <Button
+label="Criar Primeiro Projeto" variant="text" class="mt-6 !font-bold !text-indigo-600"
         @click="openNewProjectModal" />
     </div>
 
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      <div v-for="project in projects" :key="project.id"
+      <div
+v-for="project in projects" :key="project.id"
         class="group bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800 p-1 hover:border-indigo-500/50 transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/5">
         <div class="p-7">
           <div class="flex justify-between items-start mb-6">
             <div
               class="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-500">
-              <i class="pi pi-database text-xl"></i>
+              <i class="pi pi-database text-xl"/>
             </div>
-            <Tag :value="project.database_connections[0]?.database" severity="secondary"
+            <Tag
+:value="project.database_connections[0]?.database" severity="secondary"
               class="!bg-slate-100 !text-slate-600 !dark:bg-slate-800 !dark:text-slate-400 !font-bold !px-3 !py-1 !rounded-lg" />
           </div>
 
@@ -272,8 +278,9 @@ onMounted(() => {
             class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800/50 mb-6">
             <div class="flex items-center justify-between mb-3">
               <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Chave de Acesso</span>
-              <i class="pi pi-copy text-slate-300 hover:text-indigo-500 cursor-pointer transition-colors"
-                v-tooltip="'Copiar API Key'" @click="copyApiKey(project.api_key)"></i>
+              <i
+v-tooltip="'Copiar API Key'"
+                class="pi pi-copy text-slate-300 hover:text-indigo-500 cursor-pointer transition-colors" @click="copyApiKey(project.api_key)"/>
             </div>
             <code
               class="text-xs text-slate-600 dark:text-slate-300 break-all select-all block font-mono">{{ project.api_key }}</code>
@@ -282,12 +289,14 @@ onMounted(() => {
           <div class="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
             <span>Criado em {{ new Date(project.created_at).toLocaleDateString() }}</span>
             <div class="flex gap-2">
-              <Button icon="pi pi-pencil" rounded text size="small"
-                class="!w-7 !h-7 !text-slate-400 hover:!text-indigo-500 hover:!bg-indigo-50 dark:hover:!bg-indigo-500/10"
-                @click="editProject(project)" v-tooltip="'Editar'" />
-              <Button icon="pi pi-trash" rounded text size="small"
-                class="!w-7 !h-7 !text-slate-400 hover:!text-red-500 hover:!bg-red-50 dark:hover:!bg-red-500/10"
-                @click="deleteProject(project.id)" v-tooltip="'Excluir'" />
+              <Button
+v-tooltip="'Editar'" icon="pi pi-pencil" rounded text
+                size="small"
+                class="!w-7 !h-7 !text-slate-400 hover:!text-indigo-500 hover:!bg-indigo-50 dark:hover:!bg-indigo-500/10" @click="editProject(project)" />
+              <Button
+v-tooltip="'Excluir'" icon="pi pi-trash" rounded text
+                size="small"
+                class="!w-7 !h-7 !text-slate-400 hover:!text-red-500 hover:!bg-red-50 dark:hover:!bg-red-500/10" @click="deleteProject(project.id)" />
             </div>
           </div>
         </div>
@@ -295,7 +304,8 @@ onMounted(() => {
     </div>
 
     <!-- Modern Dialog -->
-    <Dialog v-model:visible="isModalOpen" modal :draggable="false" :dismissableMask="true"
+    <Dialog
+v-model:visible="isModalOpen" modal :draggable="false" :dismissable-mask="true"
       class="w-[95vw] max-w-[480px]">
       <template #header>
         <div class="flex flex-col">
@@ -313,7 +323,8 @@ onMounted(() => {
               class="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest ml-1">Identificação</label>
             <IconField class="w-full">
               <InputIcon class="pi pi-box" />
-              <InputText v-model="newProject.name" placeholder="Nome do Cliente / Projeto"
+              <InputText
+v-model="newProject.name" placeholder="Nome do Cliente / Projeto"
                 class="w-full !pl-10 !rounded-xl" size="small" />
             </IconField>
           </div>
@@ -324,7 +335,8 @@ onMounted(() => {
               Gateway</label>
             <IconField class="w-full">
               <InputIcon class="pi pi-link" />
-              <InputText v-model="newProject.slug" placeholder="cliente-alpha" class="w-full !pl-10 !rounded-xl"
+              <InputText
+v-model="newProject.slug" placeholder="cliente-alpha" class="w-full !pl-10 !rounded-xl"
                 size="small" />
             </IconField>
           </div>
@@ -335,7 +347,7 @@ onMounted(() => {
           <div class="flex items-center gap-2.5 mb-4">
             <div
               class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
-              <i class="pi pi-database text-xs"></i>
+              <i class="pi pi-database text-xs"/>
             </div>
             <span class="font-bold text-sm text-slate-800 dark:text-white">Conexão de Dados</span>
           </div>
@@ -345,18 +357,21 @@ onMounted(() => {
               <label
                 class="text-[9px] font-black text-indigo-700 dark:text-indigo-400 uppercase tracking-widest ml-1">Banco
                 de Dados</label>
-              <Select v-model="newProject.sqlServer.database" :options="availableDatabases" placeholder="Selecione..."
-                :loading="isLoadingDiscovery" class="w-full !rounded-xl" size="small" filter showClear />
+              <Select
+v-model="newProject.sqlServer.database" :options="availableDatabases" placeholder="Selecione..."
+                :loading="isLoadingDiscovery" class="w-full !rounded-xl" size="small" filter show-clear />
             </div>
 
-            <div v-if="newProject.sqlServer.database"
+            <div
+v-if="newProject.sqlServer.database"
               class="flex flex-col gap-1.5 animate-in fade-in slide-in-from-top-2 duration-500">
               <label
                 class="text-[9px] font-black text-indigo-700 dark:text-indigo-400 uppercase tracking-widest ml-1">Tabelas
                 (Scope)</label>
-              <MultiSelect v-model="selectedTables" :options="availableTables" placeholder="Selecione as tabelas..."
-                :loading="isLoadingDiscovery" class="w-full !rounded-xl" size="small" filter :maxSelectedLabels="2"
-                selectedItemsLabel="{0} tabelas selecionadas" />
+              <MultiSelect
+v-model="selectedTables" :options="availableTables" placeholder="Selecione as tabelas..."
+                :loading="isLoadingDiscovery" class="w-full !rounded-xl" size="small" filter :max-selected-labels="2"
+                selected-items-label="{0} tabelas selecionadas" />
               <p class="text-[9px] text-slate-500 italic mt-0.5 ml-1">Vazio = Acesso total ao banco.</p>
             </div>
           </div>
@@ -365,11 +380,13 @@ onMounted(() => {
 
       <template #footer>
         <div class="flex justify-end gap-3">
-          <Button label="Cancelar" variant="text" severity="secondary" @click="isModalOpen = false" size="small"
-            class="!rounded-xl" />
-          <Button :label="isEditing ? 'Salvar Alterações' : 'Finalizar e Gerar Key'" icon="pi pi-bolt"
-            @click="createProject" size="small"
-            class="!bg-indigo-600 !border-indigo-600 !text-white !font-bold !px-4 !rounded-xl" />
+          <Button
+label="Cancelar" variant="text" severity="secondary" size="small" class="!rounded-xl"
+            @click="isModalOpen = false" />
+          <Button
+:label="isEditing ? 'Salvar Alterações' : 'Finalizar e Gerar Key'" icon="pi pi-bolt"
+            size="small" class="!bg-indigo-600 !border-indigo-600 !text-white !font-bold !px-4 !rounded-xl"
+            @click="createProject" />
         </div>
       </template>
     </Dialog>

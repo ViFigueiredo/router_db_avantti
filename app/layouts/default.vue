@@ -5,7 +5,7 @@
       <div class="p-8">
         <div class="flex items-center gap-3 group cursor-pointer">
           <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:scale-110 transition-transform duration-300">
-            <i class="pi pi-database text-white text-xl"></i>
+            <i class="pi pi-database text-white text-xl"/>
           </div>
           <div class="flex flex-col">
             <span class="text-xl font-black text-slate-900 dark:text-white tracking-tight">Router DB</span>
@@ -26,8 +26,8 @@
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-indigo-500'
           ]"
         >
-          <div v-if="$route.path === '/'" class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 rounded-r-full"></div>
-          <i class="pi pi-chart-pie text-lg" :class="{ 'scale-110': $route.path === '/' }"></i>
+          <div v-if="$route.path === '/'" class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 rounded-r-full"/>
+          <i class="pi pi-chart-pie text-lg" :class="{ 'scale-110': $route.path === '/' }"/>
           <span>Dashboard</span>
         </NuxtLink>
 
@@ -40,8 +40,8 @@
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-indigo-500'
           ]"
         >
-          <div v-if="$route.path === '/projects'" class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 rounded-r-full"></div>
-          <i class="pi pi-grid text-lg" :class="{ 'scale-110': $route.path === '/projects' }"></i>
+          <div v-if="$route.path === '/projects'" class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 rounded-r-full"/>
+          <i class="pi pi-grid text-lg" :class="{ 'scale-110': $route.path === '/projects' }"/>
           <span>Projetos</span>
         </NuxtLink>
         
@@ -54,8 +54,8 @@
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-indigo-500'
           ]"
         >
-          <div v-if="$route.path === '/playground'" class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 rounded-r-full"></div>
-          <i class="pi pi-terminal text-lg" :class="{ 'scale-110': $route.path === '/playground' }"></i>
+          <div v-if="$route.path === '/playground'" class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-600 rounded-r-full"/>
+          <i class="pi pi-terminal text-lg" :class="{ 'scale-110': $route.path === '/playground' }"/>
           <span>Playground</span>
         </NuxtLink>
       </nav>
@@ -71,7 +71,7 @@
       <header class="h-20 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-10 flex items-center justify-between z-30">
         <div class="flex items-center gap-2 text-sm font-medium text-slate-500">
           <span class="hover:text-indigo-500 cursor-pointer transition-colors">Sistema</span>
-          <i class="pi pi-chevron-right text-[10px]"></i>
+          <i class="pi pi-chevron-right text-[10px]"/>
           <span class="text-slate-900 dark:text-white capitalize font-bold">{{ $route.path === '/' ? 'Dashboard' : $route.path.replace('/', '') }}</span>
         </div>
         
