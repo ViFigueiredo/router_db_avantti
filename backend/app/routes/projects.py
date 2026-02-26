@@ -1,10 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from typing import List
 from ..database import get_db
 from .. import models, schemas
 from starlette.status import HTTP_409_CONFLICT
 
 router = APIRouter()
+
+@router.get("/", response_model=List[schemas.Project])
+def list_projects(db: Session = Depends(get_db)):
+    return db.query(models.Project).all()
 
 @router.post("/", response_model=schemas.Project)
 def create_project(project: schemas.ProjectCreate, db: Session = Depends(get_db)):

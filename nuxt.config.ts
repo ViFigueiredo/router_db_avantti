@@ -4,7 +4,8 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: [
     'nuxt-security',
-    '@nuxt/eslint'
+    '@nuxt/eslint',
+    '@nuxt/ui'
   ],
   security: {
     corsHandler: {
