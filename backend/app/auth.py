@@ -39,11 +39,6 @@ async def get_project_by_api_key(
     
     return {
         "project": project,
-        "sql_config": {
-            "host": sql_config.host,
-            "port": sql_config.port,
-            "database": sql_config.database,
-            "username": sql_config.username,
-            "password": sql_config.password
-        }
+        "database": sql_config.database,
+        "allowed_tables": sql_config.allowed_tables
     }

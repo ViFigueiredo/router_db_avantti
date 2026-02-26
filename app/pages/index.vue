@@ -5,24 +5,24 @@ const toast = useToast()
 const projects = ref([])
 const isLoading = ref(true)
 const isModalOpen = ref(false)
+const availableDatabases = ref<string[]>([])
+const availableTables = ref<string[]>([])
+const isLoadingDiscovery = ref(false)
 
 const newProject = ref({
   name: '',
   slug: '',
   sqlServer: {
-    host: '',
-    port: 1433,
     database: '',
-    username: '',
-    password: ''
+    allowed_tables: ''
   }
 })
+
+const selectedTables = ref<string[]>([])
 
 const fetchProjects = async () => {
   try {
     isLoading.value = true
-    // Note: Since we don't have a GET /api/projects yet, we might need to add it to the backend
-    // For now, let's assume it returns an empty list if not implemented
     const response = await fetchApi('/api/projects/')
     projects.value = Array.isArray(response) ? response : []
   } catch (error) {
@@ -32,11 +32,53 @@ const fetchProjects = async () => {
   }
 }
 
+const fetchDatabases = async () => {
+  try {
+    isLoadingDiscovery.value = true
+    const response: any = await fetchApi('/api/projects/discover/databases')
+    availableDatabases.value = response.databases
+  } catch (error: any) {
+    toast.add({ title: 'Erro', description: 'Não foi possível listar os bancos de dados. Verifique o .env do backend.', color: 'red' })
+  } finally {
+    isLoadingDiscovery.value = false
+  }
+}
+
+const fetchTables = async (dbName: string) => {
+  if (!dbName) return
+  try {
+    isLoadingDiscovery.value = true
+    const response: any = await fetchApi(`/api/projects/discover/tables/${dbName}`)
+    availableTables.value = response.tables
+    selectedTables.value = []
+  } catch (error: any) {
+    toast.add({ title: 'Erro', description: 'Não foi possível listar as tabelas.', color: 'red' })
+  } finally {
+    isLoadingDiscovery.value = false
+  }
+}
+
+watch(() => newProject.value.sqlServer.database, (newDb) => {
+  if (newDb) {
+    fetchTables(newDb)
+  } else {
+    availableTables.value = []
+  }
+})
+
 const createProject = async () => {
   try {
+    const payload = {
+      ...newProject.value,
+      sqlServer: {
+        ...newProject.value.sqlServer,
+        allowed_tables: selectedTables.value.join(',')
+      }
+    }
+    
     await fetchApi('/api/projects/', {
       method: 'POST',
-      body: newProject.value
+      body: payload
     })
     toast.add({ title: 'Sucesso', description: 'Projeto criado com sucesso!', color: 'green' })
     isModalOpen.value = false
@@ -50,7 +92,10 @@ const createProject = async () => {
   }
 }
 
-onMounted(fetchProjects)
+onMounted(() => {
+  fetchProjects()
+  fetchDatabases()
+})
 </script>
 
 <template>
@@ -58,7 +103,7 @@ onMounted(fetchProjects)
     <div class="flex justify-between items-center">
       <div>
         <h2 class="text-2xl font-bold">Projetos</h2>
-        <p class="text-gray-500">Gerencie seus tenants e conexões SQL Server</p>
+        <p class="text-gray-500">Gerencie seus tenants e bancos de dados</p>
       </div>
       <UButton icon="i-heroicons-plus" @click="isModalOpen = true">Novo Projeto</UButton>
     </div>
@@ -86,6 +131,10 @@ onMounted(fetchProjects)
         </template>
         
         <div class="space-y-2 text-sm">
+          <div class="flex justify-between">
+            <span class="text-gray-500">Banco:</span>
+            <span class="font-medium">{{ project.database_connections[0]?.database }}</span>
+          </div>
           <div class="flex justify-between">
             <span class="text-gray-500">API Key:</span>
             <span class="font-mono text-xs">{{ project.api_key }}</span>
@@ -117,22 +166,24 @@ onMounted(fetchProjects)
           </UFormGroup>
 
           <div class="pt-4 border-t dark:border-gray-700">
-            <h4 class="font-medium mb-3">Conexão SQL Server</h4>
-            <div class="grid grid-cols-2 gap-4">
-              <UFormGroup label="Host" class="col-span-2">
-                <UInput v-model="newProject.sqlServer.host" placeholder="ex: 192.168.1.10" />
+            <h4 class="font-medium mb-3 text-sm text-gray-700 dark:text-gray-300">Configuração do Banco</h4>
+            <div class="space-y-4">
+              <UFormGroup label="Selecionar Banco de Dados" required>
+                <USelect 
+                  v-model="newProject.sqlServer.database" 
+                  :options="availableDatabases" 
+                  placeholder="Selecione um banco..."
+                  :loading="isLoadingDiscovery"
+                />
               </UFormGroup>
-              <UFormGroup label="Porta">
-                <UInput v-model.number="newProject.sqlServer.port" type="number" />
-              </UFormGroup>
-              <UFormGroup label="Banco de Dados">
-                <UInput v-model="newProject.sqlServer.database" />
-              </UFormGroup>
-              <UFormGroup label="Usuário">
-                <UInput v-model="newProject.sqlServer.username" />
-              </UFormGroup>
-              <UFormGroup label="Senha">
-                <UInput v-model="newProject.sqlServer.password" type="password" />
+              
+              <UFormGroup v-if="newProject.sqlServer.database" label="Selecionar Tabelas (Opcional)">
+                <div class="max-h-40 overflow-y-auto border dark:border-gray-700 rounded p-2 space-y-1">
+                  <div v-for="table in availableTables" :key="table" class="flex items-center gap-2">
+                    <UCheckbox v-model="selectedTables" :value="table" :label="table" />
+                  </div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Se nenhuma for selecionada, todas serão permitidas.</p>
               </UFormGroup>
             </div>
           </div>

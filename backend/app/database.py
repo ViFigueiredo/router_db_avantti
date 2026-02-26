@@ -29,13 +29,23 @@ def get_db():
 # SQL Server Connection Management
 class SQLServerConnection:
     @staticmethod
-    def get_connection(config: Dict[str, Any]):
+    def get_global_config():
+        return {
+            'host': os.getenv('SQL_SERVER_HOST', 'localhost'),
+            'port': int(os.getenv('SQL_SERVER_PORT', '1433')),
+            'username': os.getenv('SQL_SERVER_USER', 'sa'),
+            'password': os.getenv('SQL_SERVER_PASSWORD', '')
+        }
+
+    @staticmethod
+    def get_connection(database: Optional[str] = None):
+        config = SQLServerConnection.get_global_config()
         return pymssql.connect(
             server=config['host'],
             port=config['port'],
             user=config['username'],
             password=config['password'],
-            database=config['database'],
+            database=database if database else 'master',
             as_dict=True
         )
 
@@ -48,13 +58,25 @@ class SQLServerConnection:
             else:
                 cursor.execute(query)
             
-            # Check if there is a result set (for SELECT queries)
             try:
                 result = cursor.fetchall()
                 return result
             except pymssql.OperationalError:
-                # This might happen for non-SELECT queries that don't return data
                 return []
         finally:
             cursor.close()
             conn.close()
+
+    @staticmethod
+    def list_databases() -> List[str]:
+        conn = SQLServerConnection.get_connection()
+        query = "SELECT name FROM sys.databases WHERE database_id > 4" # Skip system databases
+        result = SQLServerConnection.execute_query(conn, query)
+        return [row['name'] for row in result]
+
+    @staticmethod
+    def list_tables(database: str) -> List[str]:
+        conn = SQLServerConnection.get_connection(database=database)
+        query = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'"
+        result = SQLServerConnection.execute_query(conn, query)
+        return [row['TABLE_NAME'] for row in result]

@@ -4,11 +4,8 @@ from typing import List, Optional, Dict, Any
 
 class DatabaseConnectionBase(BaseModel):
     type: str = "SQLSERVER"
-    host: str
-    port: int = 1433
     database: str
-    username: str
-    password: str
+    allowed_tables: Optional[str] = None
 
 class DatabaseConnectionCreate(DatabaseConnectionBase):
     pass
@@ -46,3 +43,9 @@ class QueryRequest(BaseModel):
 class QueryResponse(BaseModel):
     success: bool
     data: List[Dict[str, Any]]
+
+class DatabaseDiscovery(BaseModel):
+    databases: List[str]
+
+class TableDiscovery(BaseModel):
+    tables: List[str]

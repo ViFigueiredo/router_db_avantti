@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, UniqueConstraint, Text
 from sqlalchemy.orm import relationship, declarative_base
 from datetime import datetime
 import uuid
@@ -26,11 +26,8 @@ class DatabaseConnection(Base):
     id = Column(String, primary_key=True, index=True, default=generate_uuid)
     project_id = Column(String, ForeignKey("projects.id"), nullable=False)
     type = Column(String, default="SQLSERVER")
-    host = Column(String, nullable=False)
-    port = Column(Integer, default=1433)
     database = Column(String, nullable=False)
-    username = Column(String, nullable=False)
-    password = Column(String, nullable=False)
+    allowed_tables = Column(Text, nullable=True) # Comma separated or JSON string
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

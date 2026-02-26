@@ -29,6 +29,10 @@ Este documento define as principais regras, tecnologias e padrões a serem segui
 ### 5.1 Variáveis de Ambiente Gerais
 - `API_URL`: URL base do backend Python (ex: `http://localhost:8000`).
 - `SQLITE_DB_PATH`: Caminho do banco de dados SQLite principal.
+- `SQL_SERVER_HOST`: Host global do SQL Server.
+- `SQL_SERVER_PORT`: Porta global do SQL Server.
+- `SQL_SERVER_USER`: Usuário master do SQL Server.
+- `SQL_SERVER_PASSWORD`: Senha master do SQL Server.
 - `API_KEY_HEADER`: Nome do header de autenticação (padrão: `x-api-key`).
 
 ### 5.2 Autenticação e Sessão

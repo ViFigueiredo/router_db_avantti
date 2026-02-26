@@ -11,10 +11,10 @@ async def execute_sql_query(
     query_req: QueryRequest,
     context: dict = Depends(get_project_by_api_key)
 ):
-    sql_config = context["sql_config"]
+    database = context["database"]
     
     try:
-        conn = SQLServerConnection.get_connection(sql_config)
+        conn = SQLServerConnection.get_connection(database=database)
         data = SQLServerConnection.execute_query(conn, query_req.sql, query_req.params)
         
         return {
