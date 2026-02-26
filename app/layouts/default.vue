@@ -210,4 +210,61 @@ body {
 .p-select-option, .p-multiselect-option {
   @apply text-slate-700 dark:text-slate-300 !important;
 }
+
+/* Custom Toast Styling */
+.p-toast {
+  @apply !w-96 !max-w-[90vw];
+}
+
+.p-toast-message {
+  @apply !rounded-2xl !border-none !shadow-2xl !backdrop-blur-xl !my-3;
+}
+
+.p-toast-message-content {
+  @apply !py-4 !px-5 !gap-4;
+}
+
+/* Success Toast */
+.p-toast-message-success {
+  @apply !bg-emerald-50/90 dark:!bg-emerald-900/20 !text-emerald-900 dark:!text-emerald-100 !border-l-4 !border-emerald-500;
+}
+.p-toast-message-success .p-toast-message-icon {
+  @apply !text-emerald-500;
+}
+
+/* Error Toast */
+.p-toast-message-error {
+  @apply !bg-red-50/90 dark:!bg-red-900/20 !text-red-900 dark:!text-red-100 !border-l-4 !border-red-500;
+}
+.p-toast-message-error .p-toast-message-icon {
+  @apply !text-red-500;
+}
+
+/* Warn Toast */
+.p-toast-message-warn {
+  @apply !bg-amber-50/90 dark:!bg-amber-900/20 !text-amber-900 dark:!text-amber-100 !border-l-4 !border-amber-500;
+}
+.p-toast-message-warn .p-toast-message-icon {
+  @apply !text-amber-500;
+}
+
+/* Info Toast */
+.p-toast-message-info {
+  @apply !bg-blue-50/90 dark:!bg-blue-900/20 !text-blue-900 dark:!text-blue-100 !border-l-4 !border-blue-500;
+}
+.p-toast-message-info .p-toast-message-icon {
+  @apply !text-blue-500;
+}
+
+.p-toast-detail {
+  @apply !mt-1 !text-sm !opacity-90;
+}
+
+.p-toast-summary {
+  @apply !font-bold !text-base;
+}
+
+.p-toast-icon-close {
+  @apply !w-6 !h-6 !rounded-lg hover:!bg-black/5 dark:hover:!bg-white/10 !transition-colors;
+}
 </style>

@@ -95,7 +95,7 @@ const createProject = async () => {
   try {
     const payload = {
       ...newProject.value,
-      sqlServer: {
+      sql_server: {
         ...newProject.value.sqlServer,
         allowed_tables: selectedTables.value.join(',')
       }
@@ -110,7 +110,19 @@ const createProject = async () => {
     resetForm()
     fetchProjects()
   } catch (error: any) {
-    toast.add({ severity: 'error', summary: 'Erro', detail: error.data?.detail || 'Erro ao criar projeto', life: 5000 })
+    let errorMessage = 'Erro ao criar projeto'
+    if (error.data) {
+      if (Array.isArray(error.data)) {
+        // Handle Pydantic validation errors
+        const firstError = error.data[0]
+        if (firstError.msg && firstError.loc) {
+          errorMessage = `${firstError.msg} (${firstError.loc.join('.')})`
+        }
+      } else if (error.data.detail) {
+        errorMessage = error.data.detail
+      }
+    }
+    toast.add({ severity: 'error', summary: 'Erro', detail: errorMessage, life: 5000 })
   }
 }
 
