@@ -38,7 +38,7 @@ export default defineNuxtConfig({
       crossOriginResourcePolicy: 'same-origin',
       strictTransportSecurity: {
         maxAge: 31536000,
-        includeSubDomains: true,
+        includeSubdomains: true,
         preload: true
       },
       xContentTypeOptions: 'nosniff',
