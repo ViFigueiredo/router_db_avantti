@@ -1,4 +1,4 @@
-from fastapi import Security, HTTPException, Depends
+from fastapi import Security, HTTPException, Depends, Request
 from fastapi.security.api_key import APIKeyHeader
 from sqlalchemy.orm import Session
 from .database import get_db
@@ -9,6 +9,7 @@ API_KEY_NAME = "x-api-key"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
 async def get_project_by_api_key(
+    request: Request,
     api_key: str = Security(api_key_header),
     db: Session = Depends(get_db)
 ):
@@ -25,6 +26,9 @@ async def get_project_by_api_key(
             detail="Invalid API Key"
         )
     
+    # Store project_id in request state for logging
+    request.state.project_id = project.id
+
     # Get SQL Server connection for this project
     sql_config = db.query(DatabaseConnection).filter(
         DatabaseConnection.project_id == project.id,

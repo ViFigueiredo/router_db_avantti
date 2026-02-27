@@ -54,6 +54,16 @@ async def log_middleware(request: Request, call_next):
     else:
         logger.info(f"Event: {json.dumps(log_dict)}")
     
+    # Extract project_id from context if available (it might be set by auth middleware)
+    # Since middlewares run in order, we might need a way to share state. 
+    # For now, let's try to extract it from the request state if set by get_project_by_api_key
+    project_id = getattr(request.state, "project_id", None)
+    
+    # If not in state, try to parse from URL for specific routes if needed, 
+    # or rely on the auth dependency which runs *after* middleware start but *before* response?
+    # Actually, dependencies run inside the route handler, so middleware sees the request 'around' it.
+    # We can't easily access dependency return values here unless we attach them to request.state in the dependency.
+
     # Log to Database
     try:
         db = SessionLocal()
@@ -63,7 +73,8 @@ async def log_middleware(request: Request, call_next):
             path=request.url.path,
             status_code=response.status_code,
             duration_ms=int(process_time),
-            client_ip=request.client.host if request.client else "unknown"
+            client_ip=request.client.host if request.client else "unknown",
+            project_id=project_id
         )
         db.add(db_log)
         db.commit()

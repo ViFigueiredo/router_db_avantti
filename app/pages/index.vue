@@ -26,6 +26,7 @@ const getStatusConfig = (status: string) => {
   return configs[status] || configs.offline
 }
 
+const isActivityModalOpen = ref(false)
 const recentActivity = ref<any[]>([])
 
 const fetchStats = async () => {
@@ -186,7 +187,9 @@ class="relative inline-flex rounded-full h-2.5 w-2.5"
         class="flex-1 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 p-8 shadow-sm min-w-0 overflow-hidden">
         <div class="flex items-center justify-between mb-8">
           <h3 class="text-xl font-bold text-slate-900 dark:text-white">Atividade Recente</h3>
-          <Button label="Ver tudo" variant="text" size="small" class="!text-indigo-600 !font-bold" />
+          <Button
+label="Ver tudo" variant="text" size="small" class="!text-indigo-600 !font-bold"
+            @click="isActivityModalOpen = true" />
         </div>
 
         <div class="overflow-x-auto">
@@ -233,7 +236,7 @@ class="text-[10px] font-bold uppercase tracking-wider mt-1"
                 <td class="p-4 align-top">
                   <div class="max-w-[200px] truncate">
                     <span class="text-xs font-mono text-slate-500 cursor-help" :title="activity.query">{{ activity.query
-                      }}</span>
+                    }}</span>
                   </div>
                 </td>
                 <td class="p-4 align-top">
@@ -269,6 +272,96 @@ class="text-[10px] font-bold uppercase tracking-wider mt-1"
         </div>
       </div>
     </div>
+
+    <!-- Activity Log Modal -->
+    <Dialog
+v-model:visible="isActivityModalOpen" modal maximizable :draggable="false" :dismissable-mask="true"
+      class="w-[95vw] h-[90vh]">
+      <template #header>
+        <div class="flex flex-col">
+          <span class="text-xl font-black text-slate-900 dark:text-white tracking-tight">Histórico de Atividades</span>
+          <span class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mt-0.5">Logs Completos</span>
+        </div>
+      </template>
+      <div class="h-full overflow-y-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-slate-100 dark:border-slate-800 sticky top-0 z-10">
+              <th
+                class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 min-w-[150px]">
+                Nome</th>
+              <th
+                class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 min-w-[300px]">
+                Query</th>
+              <th
+                class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 min-w-[100px]">
+                Tabelas</th>
+              <th
+                class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 min-w-[140px]">
+                Data/Hora</th>
+              <th
+                class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 text-center">
+                Conn</th>
+              <th
+                class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 text-center">
+                Reqs</th>
+              <th
+                class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 text-center min-w-[140px]">
+                Latência</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-50 dark:divide-slate-800/50">
+            <tr
+v-for="activity in recentActivity" :key="activity.id"
+              class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+              <td class="p-4 align-top">
+                <div class="flex flex-col">
+                  <span class="font-bold text-sm text-slate-700 dark:text-slate-300">{{ activity.project }}</span>
+                  <span
+class="text-[10px] font-bold uppercase tracking-wider mt-1"
+                    :class="activity.status === 'success' ? 'text-emerald-500' : 'text-red-500'">
+                    {{ activity.method }}
+                  </span>
+                </div>
+              </td>
+              <td class="p-4 align-top">
+                <div class="max-w-xl break-all">
+                  <span class="text-xs font-mono text-slate-500 select-all">{{ activity.query
+                  }}</span>
+                </div>
+              </td>
+              <td class="p-4 align-top">
+                <span
+                  class="inline-flex text-xs font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded whitespace-nowrap">
+                  {{ activity.tables }}
+                </span>
+              </td>
+              <td class="p-4 align-top">
+                <span class="text-xs text-slate-500 font-mono">{{ activity.time }}</span>
+              </td>
+              <td class="p-4 align-top text-center">
+                <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400">{{ activity.connections }}</span>
+              </td>
+              <td class="p-4 align-top text-center">
+                <span class="text-xs font-bold text-slate-600 dark:text-slate-400">{{ activity.requests }}</span>
+              </td>
+              <td class="p-4 align-top">
+                <div class="flex items-center justify-center gap-1 text-[10px] font-mono">
+                  <span class="text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded">{{
+                    activity.min_lat }}</span>
+                  <span class="text-slate-400">/</span>
+                  <span class="text-blue-600 bg-blue-50 dark:bg-blue-500/10 px-1.5 py-0.5 rounded font-bold">{{
+                    activity.avg_lat }}</span>
+                  <span class="text-slate-400">/</span>
+                  <span class="text-amber-600 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded">{{
+                    activity.max_lat }}</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </Dialog>
   </div>
 </template>
 
