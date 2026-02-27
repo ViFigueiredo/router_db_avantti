@@ -123,7 +123,7 @@ const filteredActivity = computed(() => {
     // We want to see if the log involves the selected table
     result = result.filter(log => log.tables.split(',').map(t => t.trim()).includes(filters.value.tables))
   }
-  if (filters.value.minLatency) {
+  if (filters.value.minLatency !== null) {
     result = result.filter(log => {
       const lat = parseInt(log.avg_lat.replace('ms', ''))
       return lat >= (filters.value.minLatency || 0)
@@ -250,6 +250,12 @@ onMounted(() => {
 onUnmounted(() => {
   if (refreshTimer) clearInterval(refreshTimer)
 })
+
+const copyToClipboard = (text: string) => {
+  if (navigator && navigator.clipboard) {
+    navigator.clipboard.writeText(text)
+  }
+}
 </script>
 
 <template>
@@ -293,48 +299,48 @@ v-model="refreshInterval" :options="refreshOptions" option-label="label" option-
               <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">API Gateway</span>
               <span
 class="flex items-center gap-2 text-xs font-bold"
-                :class="getStatusConfig(systemStatus.api_gateway).color">
+                :class="getStatusConfig(systemStatus?.api_gateway || 'offline').color">
                 <span class="relative flex h-2.5 w-2.5">
                   <span
 class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-                    :class="getStatusConfig(systemStatus.api_gateway).ping" />
+                    :class="getStatusConfig(systemStatus?.api_gateway || 'offline').ping" />
                   <span
 class="relative inline-flex rounded-full h-2.5 w-2.5"
-                    :class="getStatusConfig(systemStatus.api_gateway).dot" />
+                    :class="getStatusConfig(systemStatus?.api_gateway || 'offline').dot" />
                 </span>
-                {{ getStatusConfig(systemStatus.api_gateway).label }}
+                {{ getStatusConfig(systemStatus?.api_gateway || 'offline').label }}
               </span>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">SQL Server</span>
               <span
 class="flex items-center gap-2 text-xs font-bold"
-                :class="getStatusConfig(systemStatus.sql_server).color">
+                :class="getStatusConfig(systemStatus?.sql_server || 'offline').color">
                 <span class="relative flex h-2.5 w-2.5">
                   <span
 class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-                    :class="getStatusConfig(systemStatus.sql_server).ping" />
+                    :class="getStatusConfig(systemStatus?.sql_server || 'offline').ping" />
                   <span
 class="relative inline-flex rounded-full h-2.5 w-2.5"
-                    :class="getStatusConfig(systemStatus.sql_server).dot" />
+                    :class="getStatusConfig(systemStatus?.sql_server || 'offline').dot" />
                 </span>
-                {{ getStatusConfig(systemStatus.sql_server).label }}
+                {{ getStatusConfig(systemStatus?.sql_server || 'offline').label }}
               </span>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Discovery Service</span>
               <span
 class="flex items-center gap-2 text-xs font-bold"
-                :class="getStatusConfig(systemStatus.discovery).color">
+                :class="getStatusConfig(systemStatus?.discovery || 'offline').color">
                 <span class="relative flex h-2.5 w-2.5">
                   <span
 class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-                    :class="getStatusConfig(systemStatus.discovery).ping" />
+                    :class="getStatusConfig(systemStatus?.discovery || 'offline').ping" />
                   <span
 class="relative inline-flex rounded-full h-2.5 w-2.5"
-                    :class="getStatusConfig(systemStatus.discovery).dot" />
+                    :class="getStatusConfig(systemStatus?.discovery || 'offline').dot" />
                 </span>
-                {{ getStatusConfig(systemStatus.discovery).label }}
+                {{ getStatusConfig(systemStatus?.discovery || 'offline').label }}
               </span>
             </div>
           </div>
@@ -619,7 +625,7 @@ v-model="filters.minLatency" :min="0" placeholder="0" suffix=" ms" :show-buttons
                   <Button
 icon="pi pi-copy" text rounded size="small"
                     class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity !w-6 !h-6"
-                    @click="() => navigator.clipboard.writeText(data.query)" />
+                    @click="() => copyToClipboard(data.query)" />
                 </div>
               </template>
             </Column>

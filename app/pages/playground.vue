@@ -42,7 +42,7 @@ const executeQuery = async () => {
 }
 
 const columns = computed(() => {
-  if (!results.value.length) return []
+  if (!results.value.length || !results.value[0]) return []
   return Object.keys(results.value[0]).map(key => ({
     field: key,
     header: key.charAt(0).toUpperCase() + key.slice(1)
