@@ -122,7 +122,7 @@ class SQLServerConnection:
             raise ConnectionError(f"Falha na conexão ODBC: {str(e)}")
 
     @staticmethod
-    def execute_query(conn, query: str, params: Optional[Dict[str, Any]] = None, close_conn: bool = True) -> List[Dict[str, Any]]:
+    def execute_query(conn, query: str, params: Optional[Dict[str, Any]] = None, close_conn: bool = True, limit: Optional[int] = None) -> List[Dict[str, Any]]:
         cursor = conn.cursor()
         try:
             if params:
@@ -132,9 +132,16 @@ class SQLServerConnection:
             else:
                 cursor.execute(query)
             
+            if cursor.description is None:
+                # No results (e.g. UPDATE/INSERT)
+                return []
+
             columns = [column[0] for column in cursor.description]
             result = []
-            for row in cursor.fetchall():
+            
+            rows = cursor.fetchmany(limit) if limit else cursor.fetchall()
+            
+            for row in rows:
                 result.append(dict(zip(columns, row)))
             return result
         except Exception as e:
@@ -143,7 +150,12 @@ class SQLServerConnection:
         finally:
             cursor.close()
             if close_conn:
-                conn.close()
+                try:
+                    conn.close()
+                except:
+                    pass
+                # Cleanup from pool if we are closing
+                # Note: logic here is a bit simplistic for a real pool, but matches existing pattern
                 for db, c in list(SQLServerConnection._connection_pool.items()):
                     if c == conn:
                         del SQLServerConnection._connection_pool[db]

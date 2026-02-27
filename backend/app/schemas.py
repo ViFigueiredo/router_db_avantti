@@ -40,6 +40,7 @@ class Project(ProjectBase):
 class QueryRequest(BaseModel):
     sql: str
     params: Optional[Dict[str, Any]] = None
+    limit: Optional[int] = 1000
 
 class QueryResponse(BaseModel):
     success: bool

@@ -86,12 +86,15 @@ onMounted(() => {
           <div class="space-y-4">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">API Gateway</span>
-              <span class="flex items-center gap-2 text-xs font-bold"
+              <span
+class="flex items-center gap-2 text-xs font-bold"
                 :class="getStatusConfig(systemStatus.api_gateway).color">
                 <span class="relative flex h-2.5 w-2.5">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                  <span
+class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
                     :class="getStatusConfig(systemStatus.api_gateway).ping" />
-                  <span class="relative inline-flex rounded-full h-2.5 w-2.5"
+                  <span
+class="relative inline-flex rounded-full h-2.5 w-2.5"
                     :class="getStatusConfig(systemStatus.api_gateway).dot" />
                 </span>
                 {{ getStatusConfig(systemStatus.api_gateway).label }}
@@ -99,12 +102,15 @@ onMounted(() => {
             </div>
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">SQL Server</span>
-              <span class="flex items-center gap-2 text-xs font-bold"
+              <span
+class="flex items-center gap-2 text-xs font-bold"
                 :class="getStatusConfig(systemStatus.sql_server).color">
                 <span class="relative flex h-2.5 w-2.5">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                  <span
+class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
                     :class="getStatusConfig(systemStatus.sql_server).ping" />
-                  <span class="relative inline-flex rounded-full h-2.5 w-2.5"
+                  <span
+class="relative inline-flex rounded-full h-2.5 w-2.5"
                     :class="getStatusConfig(systemStatus.sql_server).dot" />
                 </span>
                 {{ getStatusConfig(systemStatus.sql_server).label }}
@@ -112,12 +118,15 @@ onMounted(() => {
             </div>
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Discovery Service</span>
-              <span class="flex items-center gap-2 text-xs font-bold"
+              <span
+class="flex items-center gap-2 text-xs font-bold"
                 :class="getStatusConfig(systemStatus.discovery).color">
                 <span class="relative flex h-2.5 w-2.5">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                  <span
+class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
                     :class="getStatusConfig(systemStatus.discovery).ping" />
-                  <span class="relative inline-flex rounded-full h-2.5 w-2.5"
+                  <span
+class="relative inline-flex rounded-full h-2.5 w-2.5"
                     :class="getStatusConfig(systemStatus.discovery).dot" />
                 </span>
                 {{ getStatusConfig(systemStatus.discovery).label }}
@@ -208,12 +217,14 @@ onMounted(() => {
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-50 dark:divide-slate-800/50">
-              <tr v-for="activity in recentActivity" :key="activity.id"
+              <tr
+v-for="activity in recentActivity" :key="activity.id"
                 class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                 <td class="p-4 align-top">
                   <div class="flex flex-col">
                     <span class="font-bold text-sm text-slate-700 dark:text-slate-300">{{ activity.project }}</span>
-                    <span class="text-[10px] font-bold uppercase tracking-wider mt-1"
+                    <span
+class="text-[10px] font-bold uppercase tracking-wider mt-1"
                       :class="activity.status === 'success' ? 'text-emerald-500' : 'text-red-500'">
                       {{ activity.method }}
                     </span>

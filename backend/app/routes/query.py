@@ -15,7 +15,7 @@ async def execute_sql_query(
     
     try:
         conn = SQLServerConnection.get_connection(database=database)
-        data = SQLServerConnection.execute_query(conn, query_req.sql, query_req.params)
+        data = SQLServerConnection.execute_query(conn, query_req.sql, query_req.params, limit=query_req.limit)
         
         return {
             "success": True,
