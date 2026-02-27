@@ -42,7 +42,7 @@ def get_status():
 import re
 
 @router.get("/activity", response_model=List[schemas.RequestLog])
-def get_activity(limit: int = 10, db: Session = Depends(get_db)):
+def get_activity(limit: int = 1000, db: Session = Depends(get_db)):
     # Using joinedload to fetch project name efficiently would be better, but we need dynamic table parsing anyway.
     logs = db.query(models.RequestLog).order_by(models.RequestLog.timestamp.desc()).limit(limit).all()
     

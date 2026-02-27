@@ -174,7 +174,7 @@ const fetchStats = async () => {
     const [statsData, statusData, activityData] = await Promise.all([
       fetchApi('/api/dashboard/stats'),
       fetchApi('/api/dashboard/status'),
-      fetchApi('/api/dashboard/activity')
+      fetchApi('/api/dashboard/activity' + (isActivityModalOpen.value ? '?limit=1000' : ''))
     ])
 
     stats.value = statsData as any
@@ -200,6 +200,12 @@ const fetchStats = async () => {
     console.error('Error fetching dashboard stats:', error)
   }
 }
+
+watch(isActivityModalOpen, (isOpen) => {
+  if (isOpen) {
+    fetchStats()
+  }
+})
 
 onMounted(() => {
   fetchStats()
@@ -399,7 +405,7 @@ class="text-[10px] font-bold uppercase tracking-wider mt-1"
                 <td class="p-4 align-top">
                   <div class="max-w-[200px] truncate">
                     <span class="text-xs font-mono text-slate-500 cursor-help" :title="activity.query">{{ activity.query
-                    }}</span>
+                      }}</span>
                   </div>
                 </td>
                 <td class="p-4 align-top">
@@ -575,7 +581,7 @@ class="text-[10px] font-bold uppercase tracking-wider mt-1"
               <td class="p-4 align-top">
                 <div class="max-w-xl break-all">
                   <span class="text-xs font-mono text-slate-500 select-all">{{ activity.query
-                  }}</span>
+                    }}</span>
                 </div>
               </td>
               <td class="p-4 align-top">
