@@ -65,5 +65,9 @@ export default defineNuxtConfig({
     public: {
       apiUrl: process.env.API_URL || 'http://localhost:8000'
     }
+  },
+  server: {
+    port: process.env.PORT || 3000,
+    host: '0.0.0.0'
   }
 })
