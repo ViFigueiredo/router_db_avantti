@@ -59,14 +59,13 @@ const fetchDatabases = async () => {
   }
 }
 
-const isSettingInitialData = ref(false)
-
 const fetchTables = async (dbName: string) => {
   if (!dbName) return
   try {
     isLoadingDiscovery.value = true
     const response: any = await fetchApi(`/api/projects/discover/tables/${dbName}`)
     availableTables.value = response.tables
+    // selectedTables.value = [] // Removed: Handled in watcher to avoid conflict with edit mode
   } catch (error: any) {
     toast.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível listar as tabelas.', life: 3000 })
   } finally {
@@ -87,13 +86,17 @@ const slugify = (text: string) => {
 }
 
 watch(() => newProject.value.name, (newName) => {
-  newProject.value.slug = slugify(newName)
+  if (!isEditing.value) {
+    newProject.value.slug = slugify(newName)
+  }
 })
 
-watch(() => newProject.value.sqlServer.database, (newDb) => {
-  if (!isSettingInitialData.value) {
+watch(() => newProject.value.sqlServer.database, (newDb, oldDb) => {
+  // Only clear tables if the database actually changed and it's not the initial setup
+  if (newDb !== oldDb) {
     selectedTables.value = []
   }
+
   if (newDb) fetchTables(newDb)
   else availableTables.value = []
 })
@@ -157,11 +160,9 @@ const openNewProjectModal = () => {
   isModalOpen.value = true
 }
 
-const editProject = async (project: any) => {
+const editProject = (project: any) => {
   isEditing.value = true
-  isSettingInitialData.value = true
   editingId.value = project.id
-  
   newProject.value = {
     name: project.name,
     slug: project.slug,
@@ -182,9 +183,6 @@ const editProject = async (project: any) => {
   }
 
   isModalOpen.value = true
-  
-  await nextTick()
-  isSettingInitialData.value = false
 }
 
 const deleteProject = (id: string) => {
