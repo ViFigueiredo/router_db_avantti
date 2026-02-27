@@ -11,10 +11,11 @@ router = APIRouter()
 @router.get("/stats", response_model=schemas.DashboardStats)
 def get_stats(db: Session = Depends(get_db)):
     total_projects = db.query(models.Project).count()
-    total_requests = db.query(models.RequestLog).count()
+    # Count only requests associated with a project
+    total_requests = db.query(models.RequestLog).filter(models.RequestLog.project_id.isnot(None)).count()
     
-    # Calculate average response time
-    avg_duration = db.query(func.avg(models.RequestLog.duration_ms)).scalar()
+    # Calculate average response time for project requests only
+    avg_duration = db.query(func.avg(models.RequestLog.duration_ms)).filter(models.RequestLog.project_id.isnot(None)).scalar()
     avg_response_time = f"{int(avg_duration)}ms" if avg_duration else "0ms"
     
     # Active connections (using projects count as proxy for now)
@@ -43,13 +44,17 @@ import re
 
 @router.get("/activity", response_model=List[schemas.RequestLog])
 def get_activity(limit: int = 1000, db: Session = Depends(get_db)):
-    # Using joinedload to fetch project name efficiently would be better, but we need dynamic table parsing anyway.
-    logs = db.query(models.RequestLog).order_by(models.RequestLog.timestamp.desc()).limit(limit).all()
+    # Filter logs to only include those with a project_id (excluding System logs)
+    logs = db.query(models.RequestLog)\
+        .filter(models.RequestLog.project_id.isnot(None))\
+        .order_by(models.RequestLog.timestamp.desc())\
+        .limit(limit)\
+        .all()
     
     enriched_logs = []
     for log in logs:
         # Get project name
-        project_name = "System"
+        project_name = "Unknown"
         if log.project_id:
              project = db.query(models.Project).filter(models.Project.id == log.project_id).first()
              if project:
