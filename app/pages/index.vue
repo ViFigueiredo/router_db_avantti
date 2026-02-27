@@ -29,6 +29,124 @@ const getStatusConfig = (status: string) => {
 const isActivityModalOpen = ref(false)
 const recentActivity = ref<any[]>([])
 
+// Filter Logic
+const filters = ref({
+  project: '',
+  query: '',
+  tables: '',
+  period: 'all', // all, 1h, 24h, 7d
+  minLatency: null as number | null
+})
+
+const periodOptions = [
+  { label: 'Todo Período', value: 'all' },
+  { label: 'Última Hora', value: '1h' },
+  { label: 'Últimas 24h', value: '24h' },
+  { label: 'Últimos 7 dias', value: '7d' }
+]
+
+const sortField = ref('timestamp')
+const sortOrder = ref(-1) // 1 for asc, -1 for desc
+
+const toggleSort = (field: string) => {
+  if (sortField.value === field) {
+    sortOrder.value = sortOrder.value * -1
+  } else {
+    sortField.value = field
+    sortOrder.value = -1
+  }
+}
+
+const filteredActivity = computed(() => {
+  let result = [...recentActivity.value]
+
+  // Apply filters
+  if (filters.value.project) {
+    result = result.filter(log => log.project.toLowerCase().includes(filters.value.project.toLowerCase()))
+  }
+  if (filters.value.query) {
+    result = result.filter(log => log.query.toLowerCase().includes(filters.value.query.toLowerCase()))
+  }
+  if (filters.value.tables) {
+    result = result.filter(log => log.tables.toLowerCase().includes(filters.value.tables.toLowerCase()))
+  }
+  if (filters.value.minLatency) {
+    result = result.filter(log => {
+      const lat = parseInt(log.avg_lat.replace('ms', ''))
+      return lat >= (filters.value.minLatency || 0)
+    })
+  }
+
+  if (filters.value.period !== 'all') {
+    const now = new Date().getTime()
+    const timeMap: Record<string, number> = {
+      '1h': 3600000,
+      '24h': 86400000,
+      '7d': 604800000
+    }
+    const ms = timeMap[filters.value.period]
+    if (ms) {
+      // Note: We need the raw timestamp for accurate filtering, but we only have formatted time string in recentActivity
+      // Ideally, we should store raw timestamp in recentActivity objects.
+      // For now, let's assume we can parse it back or update fetchStats to store raw timestamp.
+      // Let's update fetchStats first to include raw timestamp.
+      result = result.filter(log => {
+        return (now - log.raw_timestamp) <= ms
+      })
+    }
+  }
+
+  // Apply Sorting
+  result.sort((a, b) => {
+    let valA = a[sortField.value]
+    let valB = b[sortField.value]
+
+    // Handle numeric sorting for latency
+    if (sortField.value === 'avg_lat') {
+      valA = parseInt(a.avg_lat.replace('ms', ''))
+      valB = parseInt(b.avg_lat.replace('ms', ''))
+    }
+    // Handle timestamp sorting
+    if (sortField.value === 'timestamp') {
+      valA = a.raw_timestamp
+      valB = b.raw_timestamp
+    }
+
+    if (valA < valB) return -1 * sortOrder.value
+    if (valA > valB) return 1 * sortOrder.value
+    return 0
+  })
+
+  return result
+})
+
+// Summary Cards Logic
+const summaryStats = computed(() => {
+  const totalQueries = filteredActivity.value.length
+
+  const allTables = filteredActivity.value
+    .map(log => log.tables)
+    .filter(t => t !== '-')
+    .join(',')
+    .split(',')
+    .map(t => t.trim())
+    .filter(t => t)
+  const uniqueTables = new Set(allTables).size
+
+  const latencies = filteredActivity.value.map(log => parseInt(log.avg_lat.replace('ms', '')))
+  const minLat = latencies.length ? Math.min(...latencies) : 0
+  const maxLat = latencies.length ? Math.max(...latencies) : 0
+  const avgLat = latencies.length ? Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length) : 0
+
+  return {
+    totalQueries,
+    uniqueTables,
+    minLat,
+    avgLat,
+    maxLat
+  }
+})
+
 // Auto-refresh logic
 const refreshInterval = ref(10000) // Default 10s
 const refreshOptions = [
@@ -67,6 +185,7 @@ const fetchStats = async () => {
       project: log.project_name || log.project_id || 'System',
       status: log.status_code >= 400 ? 'error' : 'success',
       time: new Date(log.timestamp).toLocaleTimeString(),
+      raw_timestamp: new Date(log.timestamp).getTime(), // Added for filtering
       method: log.method,
       query: log.query_body || log.path,
       tables: log.tables_involved || '-',
@@ -280,7 +399,7 @@ class="text-[10px] font-bold uppercase tracking-wider mt-1"
                 <td class="p-4 align-top">
                   <div class="max-w-[200px] truncate">
                     <span class="text-xs font-mono text-slate-500 cursor-help" :title="activity.query">{{ activity.query
-                      }}</span>
+                    }}</span>
                   </div>
                 </td>
                 <td class="p-4 align-top">
@@ -327,22 +446,100 @@ v-model:visible="isActivityModalOpen" modal maximizable :draggable="false" :dism
           <span class="text-[10px] font-bold text-indigo-500 uppercase tracking-widest mt-0.5">Logs Completos</span>
         </div>
       </template>
+
+      <!-- Filters & Summary Cards -->
+      <div class="mb-6 space-y-4">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div
+            class="bg-indigo-50 dark:bg-indigo-500/10 p-4 rounded-xl border border-indigo-100 dark:border-indigo-500/20">
+            <span class="text-[10px] font-bold text-indigo-500 uppercase tracking-wider block mb-1">Total Queries</span>
+            <span class="text-2xl font-black text-slate-900 dark:text-white">{{ summaryStats.totalQueries }}</span>
+          </div>
+          <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
+            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Tabelas Únicas</span>
+            <span class="text-2xl font-black text-slate-900 dark:text-white">{{ summaryStats.uniqueTables }}</span>
+          </div>
+          <div
+            class="bg-emerald-50 dark:bg-emerald-500/10 p-4 rounded-xl border border-emerald-100 dark:border-emerald-500/20">
+            <span class="text-[10px] font-bold text-emerald-500 uppercase tracking-wider block mb-1">Lat. Mínima</span>
+            <span class="text-2xl font-black text-slate-900 dark:text-white">{{ summaryStats.minLat }}ms</span>
+          </div>
+          <div class="bg-blue-50 dark:bg-blue-500/10 p-4 rounded-xl border border-blue-100 dark:border-blue-500/20">
+            <span class="text-[10px] font-bold text-blue-500 uppercase tracking-wider block mb-1">Lat. Média</span>
+            <span class="text-2xl font-black text-slate-900 dark:text-white">{{ summaryStats.avgLat }}ms</span>
+          </div>
+          <div class="bg-amber-50 dark:bg-amber-500/10 p-4 rounded-xl border border-amber-100 dark:border-amber-500/20">
+            <span class="text-[10px] font-bold text-amber-500 uppercase tracking-wider block mb-1">Lat. Máxima</span>
+            <span class="text-2xl font-black text-slate-900 dark:text-white">{{ summaryStats.maxLat }}ms</span>
+          </div>
+        </div>
+
+        <!-- Filters Toolbar -->
+        <div
+          class="flex flex-col md:flex-row gap-4 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+          <div class="flex-1 grid grid-cols-1 md:grid-cols-4 gap-3">
+            <InputText v-model="filters.project" placeholder="Filtrar por Projeto" class="!text-xs !h-9" />
+            <InputText v-model="filters.query" placeholder="Filtrar por Query" class="!text-xs !h-9" />
+            <InputText v-model="filters.tables" placeholder="Filtrar por Tabela" class="!text-xs !h-9" />
+            <Select
+v-model="filters.period" :options="periodOptions" option-label="label" option-value="value"
+              class="!text-xs !h-9 w-full flex items-center" :pt="{ label: { class: '!py-0' } }" />
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">Latência Mín
+              (ms):</span>
+            <InputNumber
+v-model="filters.minLatency" :min="0" placeholder="0" class="!h-9 !w-20 !text-xs"
+              input-class="!py-1 !px-2 !text-xs" />
+          </div>
+        </div>
+      </div>
+
       <div class="h-full overflow-y-auto">
         <table class="w-full text-left border-collapse">
           <thead>
             <tr class="border-b border-slate-100 dark:border-slate-800 sticky top-0 z-10">
               <th
-                class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 min-w-[150px]">
-                Nome</th>
+                class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 min-w-[150px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                @click="toggleSort('project')">
+                <div class="flex items-center gap-1">
+                  Nome
+                  <i
+v-if="sortField === 'project'" class="pi text-[10px]"
+                    :class="sortOrder === 1 ? 'pi-sort-alpha-down' : 'pi-sort-alpha-up'" />
+                </div>
+              </th>
               <th
-                class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 min-w-[300px]">
-                Query</th>
+                class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 min-w-[300px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                @click="toggleSort('query')">
+                <div class="flex items-center gap-1">
+                  Query
+                  <i
+v-if="sortField === 'query'" class="pi text-[10px]"
+                    :class="sortOrder === 1 ? 'pi-sort-alpha-down' : 'pi-sort-alpha-up'" />
+                </div>
+              </th>
               <th
-                class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 min-w-[100px]">
-                Tabelas</th>
+                class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 min-w-[100px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                @click="toggleSort('tables')">
+                <div class="flex items-center gap-1">
+                  Tabelas
+                  <i
+v-if="sortField === 'tables'" class="pi text-[10px]"
+                    :class="sortOrder === 1 ? 'pi-sort-alpha-down' : 'pi-sort-alpha-up'" />
+                </div>
+              </th>
               <th
-                class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 min-w-[140px]">
-                Data/Hora</th>
+                class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 min-w-[140px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                @click="toggleSort('timestamp')">
+                <div class="flex items-center gap-1">
+                  Data/Hora
+                  <i
+v-if="sortField === 'timestamp'" class="pi text-[10px]"
+                    :class="sortOrder === 1 ? 'pi-sort-numeric-down' : 'pi-sort-numeric-up'" />
+                </div>
+              </th>
               <th
                 class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 text-center">
                 Conn</th>
@@ -350,13 +547,20 @@ v-model:visible="isActivityModalOpen" modal maximizable :draggable="false" :dism
                 class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 text-center">
                 Reqs</th>
               <th
-                class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 text-center min-w-[140px]">
-                Latência</th>
+                class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 text-center min-w-[140px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                @click="toggleSort('avg_lat')">
+                <div class="flex items-center justify-center gap-1">
+                  Latência
+                  <i
+v-if="sortField === 'avg_lat'" class="pi text-[10px]"
+                    :class="sortOrder === 1 ? 'pi-sort-numeric-down' : 'pi-sort-numeric-up'" />
+                </div>
+              </th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-50 dark:divide-slate-800/50">
             <tr
-v-for="activity in recentActivity" :key="activity.id"
+v-for="activity in filteredActivity" :key="activity.id"
               class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
               <td class="p-4 align-top">
                 <div class="flex flex-col">
@@ -371,7 +575,7 @@ class="text-[10px] font-bold uppercase tracking-wider mt-1"
               <td class="p-4 align-top">
                 <div class="max-w-xl break-all">
                   <span class="text-xs font-mono text-slate-500 select-all">{{ activity.query
-                    }}</span>
+                  }}</span>
                 </div>
               </td>
               <td class="p-4 align-top">
