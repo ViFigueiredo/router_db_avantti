@@ -28,9 +28,37 @@ export default defineNuxtConfig({
     'primeicons/primeicons.css'
   ],
   security: {
+    headers: {
+      contentSecurityPolicy: {
+        'img-src': ["'self'", 'data:', 'https:'],
+        'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Vue requires unsafe-eval/inline in dev
+      },
+      crossOriginEmbedderPolicy: 'require-corp',
+      crossOriginOpenerPolicy: 'same-origin',
+      crossOriginResourcePolicy: 'same-origin',
+      strictTransportSecurity: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true
+      },
+      xContentTypeOptions: 'nosniff',
+      xFrameOptions: 'DENY',
+      xXSSProtection: '1; mode=block'
+    },
     corsHandler: {
-      origin: '*', // Adjust this in production
-      methods: ['GET', 'POST', 'PATCH', 'DELETE']
+      origin: process.env.NODE_ENV === 'production' ? process.env.API_URL : '*',
+      methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowHeaders: ['Content-Type', 'Authorization', 'x-api-key'],
+      exposeHeaders: ['Content-Length', 'X-Total-Count']
+    },
+    requestSizeLimiter: {
+      maxRequestSizeInBytes: 2000000, // 2MB
+      maxUploadFileRequestInBytes: 8000000 // 8MB
+    },
+    rateLimiter: {
+      tokensPerInterval: 150,
+      interval: 300000, // 5 min
+      headers: false
     }
   },
   runtimeConfig: {
