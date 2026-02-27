@@ -59,13 +59,14 @@ const fetchDatabases = async () => {
   }
 }
 
+const isSettingInitialData = ref(false)
+
 const fetchTables = async (dbName: string) => {
   if (!dbName) return
   try {
     isLoadingDiscovery.value = true
     const response: any = await fetchApi(`/api/projects/discover/tables/${dbName}`)
     availableTables.value = response.tables
-    selectedTables.value = []
   } catch (error: any) {
     toast.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível listar as tabelas.', life: 3000 })
   } finally {
@@ -90,6 +91,9 @@ watch(() => newProject.value.name, (newName) => {
 })
 
 watch(() => newProject.value.sqlServer.database, (newDb) => {
+  if (!isSettingInitialData.value) {
+    selectedTables.value = []
+  }
   if (newDb) fetchTables(newDb)
   else availableTables.value = []
 })
@@ -153,9 +157,11 @@ const openNewProjectModal = () => {
   isModalOpen.value = true
 }
 
-const editProject = (project: any) => {
+const editProject = async (project: any) => {
   isEditing.value = true
+  isSettingInitialData.value = true
   editingId.value = project.id
+  
   newProject.value = {
     name: project.name,
     slug: project.slug,
@@ -176,6 +182,9 @@ const editProject = (project: any) => {
   }
 
   isModalOpen.value = true
+  
+  await nextTick()
+  isSettingInitialData.value = false
 }
 
 const deleteProject = (id: string) => {
