@@ -105,11 +105,16 @@ onUnmounted(() => {
 
       <!-- Auto-refresh Selector -->
       <div
-        class="flex items-center gap-2 bg-white dark:bg-slate-900 p-1.5 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm self-start">
-        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2">Atualizar:</span>
+        class="flex items-center gap-1 bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm self-start">
+        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-2 mr-1">Atualizar</span>
         <Select
 v-model="refreshInterval" :options="refreshOptions" option-label="label" option-value="value"
-          size="small" class="!h-8 !text-xs !border-none !shadow-none !bg-slate-50 dark:!bg-slate-800 !w-24" />
+          class="!border-0 !ring-0 !shadow-none !bg-slate-50 dark:!bg-slate-800 !rounded-lg w-20 !h-8 flex items-center justify-between"
+          :pt="{
+            root: { class: 'flex items-center' },
+            label: { class: '!text-xs !font-bold !text-slate-700 dark:!text-slate-200 !py-0 !px-3' },
+            trigger: { class: '!w-6 !text-slate-400' }
+          }" />
       </div>
     </div>
 
