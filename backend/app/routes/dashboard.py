@@ -39,6 +39,47 @@ def get_status():
         "discovery": "active"
     }
 
+import re
+
 @router.get("/activity", response_model=List[schemas.RequestLog])
 def get_activity(limit: int = 10, db: Session = Depends(get_db)):
-    return db.query(models.RequestLog).order_by(models.RequestLog.timestamp.desc()).limit(limit).all()
+    # Using joinedload to fetch project name efficiently would be better, but we need dynamic table parsing anyway.
+    logs = db.query(models.RequestLog).order_by(models.RequestLog.timestamp.desc()).limit(limit).all()
+    
+    enriched_logs = []
+    for log in logs:
+        # Get project name
+        project_name = "System"
+        if log.project_id:
+             project = db.query(models.Project).filter(models.Project.id == log.project_id).first()
+             if project:
+                 project_name = project.name
+        
+        # Parse tables from SQL (Basic Regex implementation)
+        tables = []
+        if log.query_body:
+            # Match FROM or JOIN followed by table name (simple case)
+            matches = re.findall(r'(?:FROM|JOIN)\s+([a-zA-Z0-9_]+)', log.query_body, re.IGNORECASE)
+            # Filter out common SQL keywords if matched by mistake
+            cleaned_matches = [t for t in matches if t.upper() not in ['SELECT', 'WHERE', 'GROUP', 'ORDER', 'LIMIT']]
+            tables = list(set(cleaned_matches)) # unique tables
+        
+        # Create a dict from the ORM object
+        log_dict = {
+            "id": log.id,
+            "timestamp": log.timestamp,
+            "method": log.method,
+            "path": log.path,
+            "status_code": log.status_code,
+            "duration_ms": log.duration_ms,
+            "client_ip": log.client_ip,
+            "project_id": log.project_id,
+            "error_message": log.error_message,
+            "query_body": log.query_body,
+            "project_name": project_name,
+            "tables_involved": ", ".join(tables) if tables else "-"
+        }
+        
+        enriched_logs.append(log_dict)
+        
+    return enriched_logs

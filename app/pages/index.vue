@@ -42,12 +42,12 @@ const fetchStats = async () => {
 
     recentActivity.value = (activityData as any[]).map(log => ({
       id: log.id,
-      project: log.project_id || 'System',
+      project: log.project_name || log.project_id || 'System',
       status: log.status_code >= 400 ? 'error' : 'success',
       time: new Date(log.timestamp).toLocaleTimeString(),
       method: log.method,
-      query: log.path,
-      tables: '-',
+      query: log.query_body || log.path,
+      tables: log.tables_involved || '-',
       connections: '-',
       requests: 1,
       min_lat: '-',
@@ -236,7 +236,7 @@ class="text-[10px] font-bold uppercase tracking-wider mt-1"
                 <td class="p-4 align-top">
                   <div class="max-w-[200px] truncate">
                     <span class="text-xs font-mono text-slate-500 cursor-help" :title="activity.query">{{ activity.query
-                    }}</span>
+                      }}</span>
                   </div>
                 </td>
                 <td class="p-4 align-top">
@@ -327,7 +327,7 @@ class="text-[10px] font-bold uppercase tracking-wider mt-1"
               <td class="p-4 align-top">
                 <div class="max-w-xl break-all">
                   <span class="text-xs font-mono text-slate-500 select-all">{{ activity.query
-                  }}</span>
+                    }}</span>
                 </div>
               </td>
               <td class="p-4 align-top">

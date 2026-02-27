@@ -48,3 +48,6 @@ class RequestLog(Base):
     client_ip = Column(String)
     project_id = Column(String, ForeignKey("projects.id"), nullable=True) # Optional link to project
     error_message = Column(String, nullable=True)
+    query_body = Column(Text, nullable=True) # Store the SQL query or request body
+
+    project = relationship("Project")

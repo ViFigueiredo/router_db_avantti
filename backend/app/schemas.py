@@ -72,6 +72,9 @@ class RequestLog(BaseModel):
     duration_ms: int
     client_ip: str
     project_id: Optional[str]
+    project_name: Optional[str] = None # Enriched field
+    query_body: Optional[str] = None
+    tables_involved: Optional[str] = None # Enriched field
     error_message: Optional[str]
 
     class Config:
