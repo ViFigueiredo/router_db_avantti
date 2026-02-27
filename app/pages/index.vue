@@ -29,6 +29,28 @@ const getStatusConfig = (status: string) => {
 const isActivityModalOpen = ref(false)
 const recentActivity = ref<any[]>([])
 
+// Auto-refresh logic
+const refreshInterval = ref(10000) // Default 10s
+const refreshOptions = [
+  { label: '10s', value: 10000 },
+  { label: '1min', value: 60000 },
+  { label: '5min', value: 300000 },
+  { label: '10min', value: 600000 },
+  { label: '30min', value: 1800000 },
+  { label: '1h', value: 3600000 }
+]
+
+let refreshTimer: NodeJS.Timeout | null = null
+
+const startAutoRefresh = () => {
+  if (refreshTimer) clearInterval(refreshTimer)
+  refreshTimer = setInterval(fetchStats, refreshInterval.value)
+}
+
+watch(refreshInterval, () => {
+  startAutoRefresh()
+})
+
 const fetchStats = async () => {
   try {
     const [statsData, statusData, activityData] = await Promise.all([
@@ -62,16 +84,33 @@ const fetchStats = async () => {
 
 onMounted(() => {
   fetchStats()
+  startAutoRefresh()
+})
+
+onUnmounted(() => {
+  if (refreshTimer) clearInterval(refreshTimer)
 })
 </script>
 
 <template>
   <div class="space-y-8">
     <!-- Welcome Header -->
-    <div>
-      <h2 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Visão Geral</h2>
-      <p class="text-slate-500 dark:text-slate-400 mt-2 font-medium">Acompanhe o desempenho e uso do seu gateway SQL em
-        tempo real.</p>
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <h2 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Visão Geral</h2>
+        <p class="text-slate-500 dark:text-slate-400 mt-2 font-medium">Acompanhe o desempenho e uso do seu gateway SQL
+          em
+          tempo real.</p>
+      </div>
+
+      <!-- Auto-refresh Selector -->
+      <div
+        class="flex items-center gap-2 bg-white dark:bg-slate-900 p-1.5 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm self-start">
+        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2">Atualizar:</span>
+        <Select
+v-model="refreshInterval" :options="refreshOptions" option-label="label" option-value="value"
+          size="small" class="!h-8 !text-xs !border-none !shadow-none !bg-slate-50 dark:!bg-slate-800 !w-24" />
+      </div>
     </div>
 
     <!-- KPI Grid Moved to Sidebar -->
