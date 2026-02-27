@@ -27,8 +27,57 @@ const getStatusConfig = (status: string) => {
 }
 
 const isActivityModalOpen = ref(false)
-const recentActivity = ref<any[]>([])
-const projects = ref<any[]>([])
+type ProjectApi = {
+  name: string
+  sql_server?: {
+    allowed_tables?: string[]
+  }
+}
+
+type ActivityLogApi = {
+  id: number
+  timestamp: string
+  method: string
+  path: string
+  status_code: number
+  duration_ms: number
+  project_id?: string | null
+  project_name?: string | null
+  query_body?: string | null
+  tables_involved?: string | null
+}
+
+type ActivityRow = {
+  id: number
+  project: string
+  status: 'success' | 'error'
+  time: string
+  raw_timestamp: number
+  method: string
+  query: string
+  tables: string
+  connections: string
+  requests: number
+  min_lat: string
+  avg_lat: string
+  max_lat: string
+}
+
+type DashboardStats = {
+  total_projects: number
+  total_requests: number
+  active_connections: number
+  avg_response_time: string
+}
+
+type SystemStatus = {
+  api_gateway: string
+  sql_server: string
+  discovery: string
+}
+
+const recentActivity = ref<ActivityRow[]>([])
+const projects = ref<ProjectApi[]>([])
 
 // Filter Logic
 const filters = ref({
@@ -39,27 +88,24 @@ const filters = ref({
   minLatency: null as number | null
 })
 
+const resetFilters = () => {
+  filters.value = {
+    project: null,
+    query: '',
+    tables: null,
+    dateRange: null,
+    minLatency: null
+  }
+}
+
 const projectOptions = computed(() => {
-  return projects.value.map(p => ({ label: p.name, value: p.name }))
+  return projects.value.map(p => p.name).filter(Boolean)
 })
 
 const tableOptions = computed(() => {
   const allTables = projects.value.flatMap(p => p.sql_server?.allowed_tables || [])
-  // Remove duplicates and sort
-  return [...new Set(allTables)].sort().map(t => ({ label: t, value: t }))
+  return [...new Set(allTables)].sort()
 })
-
-const sortField = ref('timestamp')
-const sortOrder = ref(-1) // 1 for asc, -1 for desc
-
-const toggleSort = (field: string) => {
-  if (sortField.value === field) {
-    sortOrder.value = sortOrder.value * -1
-  } else {
-    sortField.value = field
-    sortOrder.value = -1
-  }
-}
 
 const filteredActivity = computed(() => {
   let result = [...recentActivity.value]
@@ -95,27 +141,6 @@ const filteredActivity = computed(() => {
       result = result.filter(log => log.raw_timestamp <= endDate.getTime())
     }
   }
-
-  // Apply Sorting
-  result.sort((a, b) => {
-    let valA = a[sortField.value]
-    let valB = b[sortField.value]
-
-    // Handle numeric sorting for latency
-    if (sortField.value === 'avg_lat') {
-      valA = parseInt(a.avg_lat.replace('ms', ''))
-      valB = parseInt(b.avg_lat.replace('ms', ''))
-    }
-    // Handle timestamp sorting
-    if (sortField.value === 'timestamp') {
-      valA = a.raw_timestamp
-      valB = b.raw_timestamp
-    }
-
-    if (valA < valB) return -1 * sortOrder.value
-    if (valA > valB) return 1 * sortOrder.value
-    return 0
-  })
 
   return result
 })
@@ -171,7 +196,7 @@ watch(refreshInterval, () => {
 
 const fetchProjects = async () => {
   try {
-    const data = await fetchApi('/api/projects')
+    const data = (await fetchApi('/api/projects')) as ProjectApi[]
     projects.value = data
   } catch (error) {
     console.error('Error fetching projects:', error)
@@ -186,10 +211,10 @@ const fetchStats = async () => {
       fetchApi('/api/dashboard/activity' + (isActivityModalOpen.value ? '?limit=1000' : ''))
     ])
 
-    stats.value = statsData as any
-    systemStatus.value = statusData as any
+    stats.value = statsData as DashboardStats
+    systemStatus.value = statusData as SystemStatus
 
-    recentActivity.value = (activityData as any[]).map(log => ({
+    recentActivity.value = (activityData as ActivityLogApi[]).map(log => ({
       id: log.id,
       project: log.project_name || log.project_id || 'System',
       status: log.status_code >= 400 ? 'error' : 'success',
@@ -454,7 +479,7 @@ class="text-[10px] font-bold uppercase tracking-wider mt-1"
 
     <!-- Activity Log Modal -->
     <Dialog
-v-model:visible="isActivityModalOpen" modal maximizable :draggable="false" :dismissable-mask="true"
+v-model:visible="isActivityModalOpen" modal :draggable="false" :dismissable-mask="true"
       class="w-[95vw] h-[90vh]">
       <template #header>
         <div class="flex flex-col">
@@ -493,147 +518,160 @@ v-model:visible="isActivityModalOpen" modal maximizable :draggable="false" :dism
 
         <!-- Filters Toolbar -->
         <div
-          class="flex flex-col md:flex-row gap-4 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
-          <div class="flex-1 grid grid-cols-1 md:grid-cols-4 gap-3">
-            <Select
-v-model="filters.project" :options="projectOptions" option-label="label" option-value="value"
-              placeholder="Filtrar por Projeto" class="!text-xs !h-9 flex items-center" show-clear filter
-              :pt="{ label: { class: '!py-0 !px-2' } }" />
+          class="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+          <Toolbar class="!rounded-none !border-0 !border-b !border-slate-100 dark:!border-slate-800 !px-2 !py-1">
+            <template #start>
+              <div class="flex items-center gap-2">
+                <i class="pi pi-filter text-slate-500" />
+                <span class="font-semibold text-slate-700 dark:text-slate-200">Filtros</span>
+              </div>
+            </template>
+            <template #end>
+              <Button label="Limpar" icon="pi pi-times" text size="small" @click="resetFilters" />
+            </template>
+          </Toolbar>
 
-            <InputText v-model="filters.query" placeholder="Filtrar por Query" class="!text-xs !h-9" />
+          <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 items-end">
+              <div class="flex flex-col gap-2">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Projeto</span>
+                <Select
+v-model="filters.project" :options="projectOptions" placeholder="Todos os Projetos" show-clear
+                  filter class="w-full" />
+              </div>
 
-            <Select
-v-model="filters.tables" :options="tableOptions" option-label="label" option-value="value"
-              placeholder="Filtrar por Tabela" class="!text-xs !h-9 flex items-center" show-clear filter
-              :pt="{ label: { class: '!py-0 !px-2' } }" />
+              <div class="flex flex-col gap-2 xl:col-span-2">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Query SQL</span>
+                <InputText v-model="filters.query" placeholder="Buscar query..." class="w-full" />
+              </div>
 
-            <DatePicker
+              <div class="flex flex-col gap-2">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tabela</span>
+                <Select
+v-model="filters.tables" :options="tableOptions" placeholder="Todas as Tabelas" show-clear
+                  filter class="w-full" />
+              </div>
+
+              <div class="flex flex-col gap-2">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Período</span>
+                <DatePicker
 v-model="filters.dateRange" selection-mode="range" :show-time="true" hour-format="24"
-              placeholder="Período" class="!text-xs !h-9 w-full"
-              :pt="{ input: { class: '!py-1 !px-2 !text-xs !h-9 w-full' } }" />
-          </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">Latência Mín
-              (ms):</span>
-            <InputNumber
-v-model="filters.minLatency" :min="0" placeholder="0" class="!h-9 !w-24 !text-xs"
-              input-class="!py-1 !px-2 !text-xs !h-9" />
+                  placeholder="Selecione o intervalo" show-icon :show-on-focus="false" class="w-full" />
+              </div>
+
+              <div class="flex flex-col gap-2">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Latência (mín)</span>
+                <InputNumber
+v-model="filters.minLatency" :min="0" placeholder="0" suffix=" ms" :show-buttons="false"
+                  class="w-full" />
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="h-full overflow-y-auto">
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="border-b border-slate-100 dark:border-slate-800 sticky top-0 z-10">
-              <th
-                class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 min-w-[150px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                @click="toggleSort('project')">
-                <div class="flex items-center gap-1">
-                  Nome
-                  <i
-v-if="sortField === 'project'" class="pi text-[10px]"
-                    :class="sortOrder === 1 ? 'pi-sort-alpha-down' : 'pi-sort-alpha-up'" />
+        <div
+          class="h-full overflow-hidden flex flex-col bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
+          <DataTable
+:value="filteredActivity" scrollable scroll-height="flex" striped-rows table-class="text-sm"
+            :row-hover="true" sort-field="raw_timestamp" :sort-order="-1" :pt="{
+              root: { class: 'rounded-xl overflow-hidden' },
+              header: { class: 'bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800' }
+            }">
+            <template #empty>
+              <div class="flex flex-col items-center justify-center py-12 text-slate-400">
+                <i class="pi pi-search text-4xl mb-4 opacity-50" />
+                <p class="font-medium">Nenhuma atividade encontrada</p>
+              </div>
+            </template>
+
+            <Column field="project" header="Projeto" sortable class="min-w-[200px]">
+              <template #body="{ data }">
+                <div class="flex items-center gap-2">
+                  <div
+                    class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+                    <i class="pi pi-box text-slate-500" />
+                  </div>
+                  <div class="flex flex-col">
+                    <span class="font-bold text-slate-700 dark:text-slate-200">{{ data.project }}</span>
+                    <div class="flex items-center gap-1.5 mt-0.5">
+                      <Tag
+:value="data.method" severity="info" class="!text-[10px] !px-1.5 !py-0.5" :class="{
+                        '!bg-blue-100 !text-blue-700': data.method === 'GET',
+                        '!bg-green-100 !text-green-700': data.method === 'POST',
+                        '!bg-orange-100 !text-orange-700': data.method === 'PUT',
+                        '!bg-red-100 !text-red-700': data.method === 'DELETE'
+                      }" />
+                      <Tag
+:value="data.status === 'success' ? '200' : 'ERR'"
+                        :severity="data.status === 'success' ? 'success' : 'danger'"
+                        class="!text-[10px] !px-1.5 !py-0.5" />
+                    </div>
+                  </div>
                 </div>
-              </th>
-              <th
-                class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 min-w-[300px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                @click="toggleSort('query')">
-                <div class="flex items-center gap-1">
-                  Query
-                  <i
-v-if="sortField === 'query'" class="pi text-[10px]"
-                    :class="sortOrder === 1 ? 'pi-sort-alpha-down' : 'pi-sort-alpha-up'" />
+              </template>
+            </Column>
+
+            <Column field="query" header="Query SQL" class="min-w-[300px] max-w-[500px]">
+              <template #body="{ data }">
+                <div
+                  class="group relative bg-slate-50 dark:bg-slate-900 rounded-lg p-3 border border-slate-100 dark:border-slate-800 font-mono text-xs text-slate-600 dark:text-slate-400">
+                  <div class="line-clamp-2">{{ data.query }}</div>
+                  <Button
+icon="pi pi-copy" text rounded size="small"
+                    class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity !w-6 !h-6"
+                    @click="() => navigator.clipboard.writeText(data.query)" />
                 </div>
-              </th>
-              <th
-                class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 min-w-[100px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                @click="toggleSort('tables')">
-                <div class="flex items-center gap-1">
-                  Tabelas
-                  <i
-v-if="sortField === 'tables'" class="pi text-[10px]"
-                    :class="sortOrder === 1 ? 'pi-sort-alpha-down' : 'pi-sort-alpha-up'" />
-                </div>
-              </th>
-              <th
-                class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 min-w-[140px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                @click="toggleSort('timestamp')">
-                <div class="flex items-center gap-1">
-                  Data/Hora
-                  <i
-v-if="sortField === 'timestamp'" class="pi text-[10px]"
-                    :class="sortOrder === 1 ? 'pi-sort-numeric-down' : 'pi-sort-numeric-up'" />
-                </div>
-              </th>
-              <th
-                class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 text-center">
-                Conn</th>
-              <th
-                class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 text-center">
-                Reqs</th>
-              <th
-                class="p-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900 text-center min-w-[140px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                @click="toggleSort('avg_lat')">
-                <div class="flex items-center justify-center gap-1">
-                  Latência
-                  <i
-v-if="sortField === 'avg_lat'" class="pi text-[10px]"
-                    :class="sortOrder === 1 ? 'pi-sort-numeric-down' : 'pi-sort-numeric-up'" />
-                </div>
-              </th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-50 dark:divide-slate-800/50">
-            <tr
-v-for="activity in filteredActivity" :key="activity.id"
-              class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-              <td class="p-4 align-top">
-                <div class="flex flex-col">
-                  <span class="font-bold text-sm text-slate-700 dark:text-slate-300">{{ activity.project }}</span>
+              </template>
+            </Column>
+
+            <Column field="tables" header="Tabelas" class="min-w-[150px]">
+              <template #body="{ data }">
+                <div v-if="data.tables && data.tables !== '-'" class="flex flex-wrap gap-1">
                   <span
-class="text-[10px] font-bold uppercase tracking-wider mt-1"
-                    :class="activity.status === 'success' ? 'text-emerald-500' : 'text-red-500'">
-                    {{ activity.method }}
+v-for="table in data.tables.split(',')" :key="table"
+                    class="inline-flex items-center px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                    <i class="pi pi-table text-[10px] mr-1.5 opacity-50" />
+                    {{ table.trim() }}
                   </span>
                 </div>
-              </td>
-              <td class="p-4 align-top">
-                <div class="max-w-xl break-all">
-                  <span class="text-xs font-mono text-slate-500 select-all">{{ activity.query
+                <span v-else class="text-slate-400">-</span>
+              </template>
+            </Column>
+
+            <Column field="raw_timestamp" header="Data/Hora" sortable class="min-w-[150px]">
+              <template #body="{ data }">
+                <div class="flex flex-col">
+                  <span class="font-medium text-slate-700 dark:text-slate-300">{{ data.time }}</span>
+                  <span class="text-[10px] text-slate-400">{{ new Date(data.raw_timestamp).toLocaleDateString()
                   }}</span>
                 </div>
-              </td>
-              <td class="p-4 align-top">
-                <span
-                  class="inline-flex text-xs font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded whitespace-nowrap">
-                  {{ activity.tables }}
-                </span>
-              </td>
-              <td class="p-4 align-top">
-                <span class="text-xs text-slate-500 font-mono">{{ activity.time }}</span>
-              </td>
-              <td class="p-4 align-top text-center">
-                <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400">{{ activity.connections }}</span>
-              </td>
-              <td class="p-4 align-top text-center">
-                <span class="text-xs font-bold text-slate-600 dark:text-slate-400">{{ activity.requests }}</span>
-              </td>
-              <td class="p-4 align-top">
-                <div class="flex items-center justify-center gap-1 text-[10px] font-mono">
-                  <span class="text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded">{{
-                    activity.min_lat }}</span>
-                  <span class="text-slate-400">/</span>
-                  <span class="text-blue-600 bg-blue-50 dark:bg-blue-500/10 px-1.5 py-0.5 rounded font-bold">{{
-                    activity.avg_lat }}</span>
-                  <span class="text-slate-400">/</span>
-                  <span class="text-amber-600 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded">{{
-                    activity.max_lat }}</span>
+              </template>
+            </Column>
+
+            <Column field="avg_lat" header="Latência" sortable class="min-w-[120px]">
+              <template #body="{ data }">
+                <div class="flex items-center gap-2">
+                  <div class="flex-1 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div
+class="h-full rounded-full" :class="{
+                      'bg-emerald-500': parseInt(data.avg_lat) < 200,
+                      'bg-amber-500': parseInt(data.avg_lat) >= 200 && parseInt(data.avg_lat) < 1000,
+                      'bg-red-500': parseInt(data.avg_lat) >= 1000
+                    }" :style="{ width: Math.min(parseInt(data.avg_lat) / 20, 100) + '%' }" />
+                  </div>
+                  <span
+class="text-xs font-bold font-mono" :class="{
+                    'text-emerald-600': parseInt(data.avg_lat) < 200,
+                    'text-amber-600': parseInt(data.avg_lat) >= 200 && parseInt(data.avg_lat) < 1000,
+                    'text-red-600': parseInt(data.avg_lat) >= 1000
+                  }">
+                    {{ data.avg_lat }}
+                  </span>
                 </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              </template>
+            </Column>
+          </DataTable>
+        </div>
       </div>
     </Dialog>
   </div>

@@ -40,11 +40,17 @@ class Project(ProjectBase):
 class QueryRequest(BaseModel):
     sql: str
     params: Optional[Dict[str, Any]] = None
-    limit: Optional[int] = 1000
+    limit: Optional[int] = 50
+    page: Optional[int] = 1
 
 class QueryResponse(BaseModel):
     success: bool
     data: List[Dict[str, Any]]
+    count: int
+    total: Optional[int] = None
+    page: Optional[int] = None
+    page_size: Optional[int] = None
+    total_pages: Optional[int] = None
 
 class DatabaseDiscovery(BaseModel):
     databases: List[str]

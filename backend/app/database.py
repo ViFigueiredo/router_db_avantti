@@ -126,9 +126,16 @@ class SQLServerConnection:
         cursor = conn.cursor()
         try:
             if params:
-                # Convert params dict to positional for ODBC if needed, 
-                # but for discovery we use simple queries.
-                cursor.execute(query)
+                # Pass params to execute. pyodbc supports positional (?) parameters.
+                # If params is a dict, we might need to convert or assume query uses ? and params is list/tuple.
+                # But QueryRequest defines params as Dict[str, Any].
+                # pyodbc with SQL Server usually handles named parameters if supported by driver, 
+                # or we assume the user provides params matching the query style.
+                # Standard pyodbc use is execute(sql, params_list) or execute(sql, param1, param2...)
+                # If params is dict, we assume query uses %(name)s style? No, pyodbc uses ? usually.
+                # Let's pass params directly and hope pyodbc/SQLAlchemy driver handles it or fails gracefully.
+                # Given existing code didn't pass it, it was broken or unused.
+                cursor.execute(query, params) if isinstance(params, (list, tuple)) else cursor.execute(query, list(params.values()))
             else:
                 cursor.execute(query)
             

@@ -14,7 +14,8 @@ export default defineNitroPlugin((nitroApp) => {
     return path.join(logsDir, `frontend_${date}.log`)
   }
 
-  const writeLog = (level: string, message: any, event?: any) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const writeLog = (level: string, message: unknown, event?: any) => {
     const timestamp = new Date().toISOString()
     const logEntry = {
       timestamp,

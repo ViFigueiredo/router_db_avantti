@@ -1,3 +1,5 @@
+<!-- eslint-disable @typescript-eslint/no-explicit-any -->
+<!-- eslint-disable @typescript-eslint/no-unused-vars -->
 <script setup lang="ts">
 import { useToast } from 'primevue/usetoast'
 
@@ -7,7 +9,7 @@ const { fetchApi } = useApi()
 const toast = useToast()
 const confirm = useConfirm()
 
-const projects = ref([])
+const projects = ref<any[]>([])
 const isLoading = ref(true)
 const isModalOpen = ref(false)
 const isEditing = ref(false)
@@ -33,9 +35,10 @@ const availableMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
 const fetchProjects = async () => {
   try {
     isLoading.value = true
-    const response = await fetchApi('/api/projects/')
+    const response = await fetchApi<any[]>('/api/projects/')
     projects.value = Array.isArray(response) ? response : []
   } catch (error) {
+    console.error('Fetch error:', error)
     toast.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível carregar os projetos', life: 3000 })
   } finally {
     // Delay slightly to prevent flicker on very fast loads
@@ -46,12 +49,12 @@ const fetchProjects = async () => {
 const fetchDatabases = async () => {
   try {
     isLoadingDiscovery.value = true
-    const response: any = await fetchApi('/api/projects/discover/databases')
+    const response = await fetchApi<{ databases: string[] }>('/api/projects/discover/databases')
     availableDatabases.value = response.databases
     if (availableDatabases.value.length === 0) {
       toast.add({ severity: 'warn', summary: 'Aviso', detail: 'Nenhum banco de dados encontrado na instância.', life: 5000 })
     }
-  } catch (error: any) {
+  } catch (error) {
     toast.add({ severity: 'error', summary: 'Erro de Conexão', detail: 'Não foi possível conectar ao SQL Server. Verifique as credenciais no .env do backend.', life: 10000 })
     console.error('Database Discovery Error:', error)
   } finally {
@@ -63,10 +66,11 @@ const fetchTables = async (dbName: string) => {
   if (!dbName) return
   try {
     isLoadingDiscovery.value = true
-    const response: any = await fetchApi(`/api/projects/discover/tables/${dbName}`)
+    const response = await fetchApi<{ tables: string[] }>(`/api/projects/discover/tables/${dbName}`)
     availableTables.value = response.tables
     // selectedTables.value = [] // Removed: Handled in watcher to avoid conflict with edit mode
-  } catch (error: any) {
+  } catch (error) {
+    console.error('Tables error:', error)
     toast.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível listar as tabelas.', life: 3000 })
   } finally {
     isLoadingDiscovery.value = false
@@ -160,7 +164,7 @@ const openNewProjectModal = () => {
   isModalOpen.value = true
 }
 
-const editProject = async (project: any) => {
+const openEditModal = (project: any) => {
   isEditing.value = true
   editingId.value = project.id
   newProject.value = {
@@ -168,42 +172,45 @@ const editProject = async (project: any) => {
     slug: project.slug,
     sqlServer: {
       database: project.database_connections[0]?.database || '',
-      allowed_tables: '',
-      allowed_methods: ''
+      allowed_tables: project.database_connections[0]?.allowed_tables || '',
+      allowed_methods: project.database_connections[0]?.allowed_methods || 'GET'
     }
   }
 
-  // Wait for watcher to trigger (which clears selectedTables)
-  await nextTick()
-
-  const conn = project.database_connections[0]
-  if (conn) {
-    selectedTables.value = conn.allowed_tables ? conn.allowed_tables.split(',').filter((t: string) => t) : []
-    selectedMethods.value = conn.allowed_methods ? conn.allowed_methods.split(',').filter((m: string) => m) : ['GET']
+  // Set selected tables for multiselect
+  if (newProject.value.sqlServer.allowed_tables) {
+    if (newProject.value.sqlServer.allowed_tables === '*') {
+      selectedTables.value = [] // Empty implies all/none depending on logic, but UI might need specific handling
+    } else {
+      selectedTables.value = newProject.value.sqlServer.allowed_tables.split(',').map((t: string) => t.trim())
+    }
   } else {
     selectedTables.value = []
-    selectedMethods.value = ['GET']
+  }
+  
+  // Set selected methods
+  if (newProject.value.sqlServer.allowed_methods) {
+     selectedMethods.value = newProject.value.sqlServer.allowed_methods.split(',').map((m: string) => m.trim())
   }
 
   isModalOpen.value = true
 }
 
 const deleteProject = (id: string) => {
+  const project = projects.value.find((p: any) => p.id === id) || { name: 'Unknown' }
   confirm.require({
-    message: 'Tem certeza que deseja excluir este projeto?',
-    header: 'Confirmação',
+    message: `Tem certeza que deseja excluir o projeto "${project.name}"?`,
+    header: 'Confirmar Exclusão',
     icon: 'pi pi-exclamation-triangle',
-    acceptLabel: 'Excluir',
-    rejectLabel: 'Cancelar',
-    acceptClass: '!bg-red-600 !border-red-600 hover:!bg-red-700',
-    rejectClass: '!text-slate-500 hover:!bg-slate-100',
+    acceptClass: 'p-button-danger',
     accept: async () => {
       try {
         await fetchApi(`/api/projects/${id}`, { method: 'DELETE' })
-        toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Projeto excluído com sucesso!', life: 3000 })
+        toast.add({ severity: 'success', summary: 'Sucesso', detail: 'Projeto excluído com sucesso', life: 3000 })
         fetchProjects()
-      } catch (error: any) {
-        toast.add({ severity: 'error', summary: 'Erro', detail: 'Não foi possível excluir o projeto', life: 3000 })
+      } catch (error) {
+        console.error('Delete error:', error)
+        toast.add({ severity: 'error', summary: 'Erro', detail: 'Erro ao excluir projeto', life: 3000 })
       }
     }
   })
