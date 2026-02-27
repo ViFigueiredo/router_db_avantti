@@ -160,7 +160,7 @@ const openNewProjectModal = () => {
   isModalOpen.value = true
 }
 
-const editProject = (project: any) => {
+const editProject = async (project: any) => {
   isEditing.value = true
   editingId.value = project.id
   newProject.value = {
@@ -172,6 +172,9 @@ const editProject = (project: any) => {
       allowed_methods: ''
     }
   }
+
+  // Wait for watcher to trigger (which clears selectedTables)
+  await nextTick()
 
   const conn = project.database_connections[0]
   if (conn) {
